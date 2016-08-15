@@ -31,14 +31,14 @@ public class MainActivity extends AppCompatActivity {
             SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
             // UPDATE totals SET received = received + 1
-            String create = "CREATE TABLE totals (sent INTEGER, received INTEGER);";
+            String create = "CREATE TABLE totals (sent INTEGER default 0, received INTEGER default 0, created_on DATETIME default current_timestamp, updated_on DATETIME default current_timestamp);";
             String insert = "INSERT INTO totals (sent, received) VALUES (0, 0);";
 
             db.execSQL(create);
             db.execSQL(insert);
 
             // UPDATE totals SET received = received + 1
-            create = "CREATE TABLE contacts (id INTEGER PRIMARY KEY, number TEXT, sent INTEGER, received INTEGER);";
+            create = "CREATE TABLE contacts (id INTEGER PRIMARY KEY, number TEXT, sent INTEGER, received INTEGER, streak INTEGER, created_on DATETIME default current_timestamp, updated_on DATETIME default current_timestamp);";
 
             db.execSQL(create);
         } catch (Exception e) {
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.READ_CONTACTS},
-                    REQUEST_CODE_ASK_PERMISSIONS);
+                    REQUEST_CODE_ASK_PERMISSIONS_TWO);
 
         }
     }
@@ -125,7 +125,9 @@ public class MainActivity extends AppCompatActivity {
                 String number = cr.getString(cr.getColumnIndex("number"));
                 int received = cr.getInt(cr.getColumnIndex("received"));
                 int sent = cr.getInt(cr.getColumnIndex("sent"));
-                String text = "ID: " + id + ", NUMBER: " + number + ", REC: " + received + ", SENT: " + sent;
+                String created_on = cr.getString(cr.getColumnIndex("created_on"));
+                String updated_on = cr.getString(cr.getColumnIndex("updated_on"));
+                String text = "ID: " + id + ", NUMBER: " + number + ", REC: " + received + ", SENT: " + sent + ", CREATED_ON: " + created_on + ", UPDATED_ON: " + updated_on;
                 Log.d("TEXT_MESSAGE", text);
             } while (cr.moveToNext());
             cr.close();

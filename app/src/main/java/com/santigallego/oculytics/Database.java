@@ -37,7 +37,7 @@ public class Database {
         String insertQuery = "", updateQuery = "", selectQuery = "";
 
         // UPDATE totals SET received = received + 1
-        updateQuery = "UPDATE totals SET received = received + 1;";
+        updateQuery = "UPDATE totals SET received = received + 1, updated_on = current_timestamp;";
 
         db.execSQL(updateQuery);
 
@@ -51,7 +51,7 @@ public class Database {
             do {
                 if(cr.getString(cr.getColumnIndex("number")).equals(number)) {
                     Log.d("TEXT_MESSAGE", "EXISTS");
-                    updateQuery = "UPDATE contacts SET received = received + 1 WHERE number = " + number;
+                    updateQuery = "UPDATE contacts SET received = received + 1, updated_on = current_timestamp WHERE number = " + number;
                     db.execSQL(updateQuery);
                     checker = true;
                 }
@@ -88,7 +88,7 @@ public class Database {
         String insertQuery = "", updateQuery = "", selectQuery = "";
 
         // UPDATE totals SET received = received + 1
-        updateQuery = "UPDATE totals SET sent = sent + 1;";
+        updateQuery = "UPDATE totals SET sent = sent, updated_on = current_timestamp + 1;";
 
         db.execSQL(updateQuery);
 
@@ -102,7 +102,7 @@ public class Database {
             do {
                 if(cr.getString(cr.getColumnIndex("number")).equals(number)) {
                     Log.d("TEXT_MESSAGE", "EXISTS");
-                    updateQuery = "UPDATE contacts SET sent = sent + 1 WHERE number = " + number;
+                    updateQuery = "UPDATE contacts SET sent = sent + 1, updated_on = current_timestamp WHERE number = " + number;
                     db.execSQL(updateQuery);
                     checker = true;
                 }

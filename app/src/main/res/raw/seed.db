@@ -1,5 +1,16 @@
 CREATE TABLE totals (
+  sent INTEGER default 0,
+  received INTEGER default 0,
+  created_on DATETIME default current_timestamp,
+  updated_on DATETIME default current_timestamp
+);
+CREATE TABLE contacts (
+  id INTEGER PRIMARY KEY,
+  number TEXT,
   sent INTEGER,
-  received INTEGER
+  received INTEGER,
+  streak INTEGER,
+  created_on DATETIME default current_timestamp,
+  updated_on DATETIME default current_timestamp
 );
 INSERT INTO totals (sent, received) VALUES (0, 0);
