@@ -1,0 +1,5 @@
+CREATE TABLE totals (
+  sent INTEGER,
+  received INTEGER
+);
+INSERT INTO totals (sent, received) VALUES (0, 0);
