@@ -7,10 +7,20 @@ CREATE TABLE totals (
 CREATE TABLE contacts (
   id INTEGER PRIMARY KEY,
   number TEXT,
-  sent INTEGER,
-  received INTEGER,
-  streak INTEGER,
+  sent INTEGER default 0,
+  received INTEGER default 0,
+  streak INTEGER default 0,
   created_on DATETIME default current_timestamp,
   updated_on DATETIME default current_timestamp
 );
-INSERT INTO totals (sent, received) VALUES (0, 0);
+CREATE TABLE sms_sent (
+  id INTEGER PRIMARY KEY,
+  contact_id INTEGER,
+  sent_on DATETIME default current_timestamp
+);
+CREATE TABLE sms_received (
+  id INTEGER PRIMARY KEY,
+  contact_id INTEGER,
+  received_on DATETIME default current_timestamp
+);
+INSERT INTO totals default VALUES;
