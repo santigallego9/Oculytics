@@ -8,7 +8,7 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 
 /*
- * Created by santigallego on 8/14/16.
+ * Created by Santi Gallego on 8/14/16.
  */
 public class SmsBroadcastReceiver extends BroadcastReceiver {
     @Override
