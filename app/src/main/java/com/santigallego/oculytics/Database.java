@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 /*
- * Created by santigallego on 8/14/16.
+ * Created by Santi Gallego on 8/14/16.
  */
 public class Database {
 
@@ -91,7 +91,7 @@ public class Database {
         String insertQuery, updateQuery, selectQuery;
 
         // UPDATE totals SET received = received + 1
-        updateQuery = "UPDATE totals SET sent = sent, updated_on = current_timestamp + 1;";
+        updateQuery = "UPDATE totals SET sent = sent + 1, updated_on = current_timestamp;";
 
         db.execSQL(updateQuery);
 
