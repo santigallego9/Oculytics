@@ -11,6 +11,9 @@ import android.os.IBinder;
 import android.util.Log;
 
 public class SmsOutgoingObserver extends Service {
+
+    int id = 0;
+
     public SmsOutgoingObserver() {
     }
 
@@ -45,67 +48,44 @@ public class SmsOutgoingObserver extends Service {
         }
 
         @Override
+        public boolean deliverSelfNotifications() {
+            return true;
+        }
+
+        @Override
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
 
             //Log.d("OUTGOING", "ENTERD");
             Uri uriSMSURI = Uri.parse("content://sms");
-            Cursor cur = SmsOutgoingObserver.this.getContentResolver().query(uriSMSURI, null, null, null, null);
+            Cursor cr = SmsOutgoingObserver.this.getContentResolver().query(uriSMSURI, null, null, null, null);
             // this will make it point to the first record, which is the last SMS sent
-            cur.moveToNext();
-            String address = cur.getColumnName(0) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(1))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(2))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(3))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(4))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(5))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(6))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(7))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(8))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(9))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(10))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(11))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(12))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(13))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(14))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(15))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(16))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(17))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(18))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(19))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(20))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(21))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(22))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(23))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(24))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(25))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(26))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(27))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(28))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(29))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(30))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(31))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(32))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(33))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(34))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(35))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(36))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(37))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(38))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(39))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(40))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(41))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(42))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(43))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(44))) + "\n";
-            address += cur.getString(cur.getColumnIndex(cur.getColumnName(45))) + "\n";
-            //String address = cur.getString(cur.getColumnIndex("type"));
+            cr.moveToNext();
 
-            Log.d("OUTGOING", address);
+            if (cr.getInt(cr.getColumnIndex("type")) == 2) {
+                if(id != cr.getInt(cr.getColumnIndex(cr.getColumnName(0)))) {
+                    id = cr.getInt(cr.getColumnIndex(cr.getColumnName(0)));
+                    /*String address = cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))) + "\n";
+                    address += cr.getColumnName(1)  + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(1))) + "\n";
+                    address += cr.getColumnName(2) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(2))) + "\n";
+                    address += cr.getColumnName(3) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(3))) + "\n";
+                    address += cr.getColumnName(4) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(4))) + "\n";
+                    address += cr.getColumnName(5) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(5))) + "\n";
+                    address += cr.getColumnName(6) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(6))) + "\n";
+                    address += cr.getColumnName(7) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(7))) + "\n";
+                    address += cr.getColumnName(8) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(8))) + "\n";
+                    address += cr.getColumnName(9) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(9))) + "\n";
+                    address += "\nID: " + id;*/
 
-            cur.close();
+                    String address = cr.getString(cr.getColumnIndex("address"));
+                    Database.messageSent(SmsOutgoingObserver.this, address);
+                    Log.d("OUTGOING", address);
+                } else {
+                    Log.d("OUTGOING", "MESSAGE ALREADY LOGGED");
+                }
+            };
 
-            //Database.messageReceived(SmsOutgoingObserver.this, address);
+            cr.close();
         }
     }
 }
