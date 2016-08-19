@@ -29,8 +29,8 @@ public class SmsOutgoingObserver extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int id) {
         // unpack any parameters that were passed to us
-        ContentResolver contentResolver = this.getContentResolver();
-        contentResolver.registerContentObserver(Uri.parse("content://sms"),true, new SmsObserver(new Handler()));
+        //ContentResolver contentResolver = this.getContentResolver();
+        //contentResolver.registerContentObserver(Uri.parse("content://sms"),true, new SmsObserver(new Handler()));
 
         Log.d("OUTGOING", "RUNNING SERVICE");
 
