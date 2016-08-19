@@ -1,11 +1,10 @@
 package com.santigallego.oculytics;
 
-import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-import android.widget.Toast;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -72,7 +71,7 @@ public class Dates {
         return datetime;
     }
 
-    public String timeBefore (int yearsAgo, int monthsAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
+    public static String timeBefore (int yearsAgo, int monthsAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
 
         int years = Integer.parseInt(date.substring(0, 4));
         int months = Integer.parseInt(date.substring(5, 7));
@@ -120,5 +119,40 @@ public class Dates {
 
         return datetime;
     }
+
+    public static String fromUtcToLocal(String date) {
+
+        String local = dtfOut.print(new LocalDateTime());
+        String utc = dtfOut.print(new DateTime(DateTimeZone.UTC));
+
+        int l_hours = Integer.parseInt(local.substring(11, 13));
+        int u_hours = Integer.parseInt(utc.substring(11, 13));
+        int d_hours = Integer.parseInt(date.substring(11, 13));
+        // int l_days = Integer.parseInt(local.substring(8, 10));
+        // int u_days = Integer.parseInt(utc.substring(8, 10));
+        int d_days = Integer.parseInt(date.substring(8, 10));
+
+        int diff = l_hours - u_hours;
+        d_hours += diff;
+
+        if(d_hours < 0) {
+            d_days--;
+            d_hours += 24;
+        } else if(d_hours > 24) {
+            d_days++;
+            d_hours -= 24;
+        }
+
+        String s_days = d_days + "";
+        String s_hours = d_hours + "";
+
+        if(s_days.length() < 2) { s_days = "0" + s_days; }
+        if(s_hours.length() < 2) { s_hours = "0" + s_hours; }
+
+        date = date.substring(0, 8) + s_days + " " + s_hours + date.substring(13);
+
+        return date;
+    }
+
 
 }
