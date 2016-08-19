@@ -38,8 +38,9 @@
         <service
             android:name=".SmsOutgoingObserver"
             android:enabled="true"
-            android:exported="false">
-        </service>
+            android:exported="false"></service>
+
+        <activity android:name=".TestActivity"></activity>
     </application>
 
 </manifest>
