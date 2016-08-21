@@ -4,11 +4,19 @@ CREATE TABLE totals (
   created_on DATETIME default current_timestamp,
   updated_on DATETIME default current_timestamp
 );
+CREATE TABLE mms_totals (
+  sent INTEGER default 0,
+  received INTEGER default 0,
+  created_on DATETIME default current_timestamp,
+  updated_on DATETIME default current_timestamp
+);
 CREATE TABLE contacts (
   id INTEGER PRIMARY KEY,
   number TEXT,
   sent INTEGER default 0,
   received INTEGER default 0,
+  sent_mms INTEGER default 0,
+  received_mms INTEGER default 0,
   streak INTEGER default 0,
   created_on DATETIME default current_timestamp,
   updated_on DATETIME default current_timestamp
@@ -23,4 +31,15 @@ CREATE TABLE sms_received (
   contact_id INTEGER,
   received_on DATETIME default current_timestamp
 );
+CREATE TABLE mms_sent (
+  id INTEGER PRIMARY KEY,
+  contact_id INTEGER,
+  sent_on DATETIME default current_timestamp
+);
+CREATE TABLE mms_received (
+  id INTEGER PRIMARY KEY,
+  contact_id INTEGER,
+  received_on DATETIME default current_timestamp
+);
 INSERT INTO totals default VALUES;
+INSERT INTO mms_totals default VALUES;
