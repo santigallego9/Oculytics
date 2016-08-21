@@ -17,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -181,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
 
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
-        String query = "SELECT * FROM contacts ORDER BY sent DESC LIMIT 3;";
+        String query = "SELECT * FROM contacts ORDER BY sent DESC, received DESC LIMIT 3;";
 
         Cursor cr = db.rawQuery(query, null);
 
@@ -205,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout receivedLayout = (LinearLayout) findViewById(R.id.received_containter);
 
-        query = "SELECT * FROM contacts ORDER BY received DESC LIMIT 3;";
+        query = "SELECT * FROM contacts ORDER BY received DESC, sent DESC LIMIT 3;";
 
         Cursor c = db.rawQuery(query, null);
 
