@@ -26,6 +26,7 @@ import com.santigallego.oculytics.helpers.Contacts;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Dates;
+import com.santigallego.oculytics.helpers.MathHelper;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
 
 import org.joda.time.DateTime;
@@ -147,14 +148,15 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
             cr.close();
         }
 
-        int step = highestValue / 4;
-        highestValue++;
-        int lowestValue = -highestValue;
-        int rows = (highestValue / step) * 2;
+        //highestValue += (highestValue / 20);
+        int temp = highestValue % 4;
+        highestValue += 4 - temp;
 
-        if(step == 0) {
-            step++;
-        }
+        int yStep = (int) MathHelper.gcd(highestValue, 0) / 4;
+
+        int rows = highestValue / yStep * 2;
+
+        Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep + " ROWS: " + rows);
 
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
@@ -164,11 +166,9 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
         barChart.setRoundCorners(10);
         barChart.setBarSpacing(200);
 
-        barChart.setContentDescription("THIS IS A TEST");
-
         // data methods
         barChart.setAxisLabelsSpacing(40)
-                .setAxisBorderValues(lowestValue, highestValue, step)
+                .setAxisBorderValues(-highestValue, highestValue, yStep)
                 .setLabelsColor(Color.WHITE)
                 .setAxisColor(Color.WHITE)
                 .setXLabels(XController.LabelPosition.OUTSIDE)

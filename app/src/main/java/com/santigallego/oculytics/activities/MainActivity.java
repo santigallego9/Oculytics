@@ -316,10 +316,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         highestValue += (highestValue / 20);
-        highestValue -= highestValue % 4;
-        if(highestValue < 4) {highestValue = 4;}
+        int temp = highestValue % 6;
+        highestValue += 6 - temp;
 
-        int yStep = (int) MathHelper.gcd(highestValue, 0) / 4;
+        int yStep = (int) MathHelper.gcd(highestValue, 0) / 6;
+
+        Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep);
         int rows = highestValue / yStep;
 
 
