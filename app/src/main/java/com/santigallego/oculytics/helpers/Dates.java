@@ -41,7 +41,7 @@ public class Dates {
         return datetime;
     }
 
-    public static String timeBefore (int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
+    public static String timeAgo (int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
 
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 

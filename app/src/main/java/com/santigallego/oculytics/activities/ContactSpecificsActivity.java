@@ -125,8 +125,8 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         for(int i = days; i >= 0; i--) {
             Log.d("TEST", "ENTERED");
 
-            String new_date = Dates.timeBefore(0, 0, 0, i, 0, 0, 0, date);
-            String last_date = Dates.timeBefore(0, 0, 0, i + 1, 0, 0, 0, date);
+            String new_date = Dates.timeAgo(0, 0, 0, i, 0, 0, 0, date);
+            String last_date = Dates.timeAgo(0, 0, 0, i + 1, 0, 0, 0, date);
 
             String query = "SELECT * FROM sms_sent WHERE sent_on <= '" + new_date + "' AND sent_on >= '" + last_date + "' AND contact_id = " + contactId + ";";
             Cursor cr = db.rawQuery(query, null);
