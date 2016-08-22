@@ -18,7 +18,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activites.MainActivity">
+        <activity android:name=".activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -40,13 +40,15 @@
             android:enabled="true"
             android:exported="false" />
 
-        <activity android:name=".activites.TestActivity" />
-        <activity android:name=".activites.ContactSmsDetailsActivity" />
+        <activity android:name=".activities.TestActivity" />
+        <activity android:name=".activities.ContactSmsDetailsActivity" />
 
         <service
             android:name=".services.MmsObserver"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
+
+        <activity android:name=".activities.ContactSpecificsActivity"></activity>
     </application>
 
 </manifest>

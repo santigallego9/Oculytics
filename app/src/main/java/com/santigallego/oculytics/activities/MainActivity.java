@@ -1,10 +1,12 @@
-package com.santigallego.oculytics.activites;
+package com.santigallego.oculytics.activities;
 
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.provider.ContactsContract;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -18,16 +20,24 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.db.chart.model.LineSet;
+import com.db.chart.view.ChartView;
+import com.db.chart.view.LineChartView;
+import com.db.chart.view.XController;
+import com.db.chart.view.YController;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
-import com.santigallego.oculytics.helpers.Charts;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
+import com.santigallego.oculytics.helpers.Dates;
 import com.santigallego.oculytics.helpers.PhoneNumbers;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
 import com.santigallego.oculytics.services.ObserverService;
+
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Setup API 21 toolbar actionbar
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
@@ -104,7 +113,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Setup ALL information.
-    public void setInformation() {
+    private void setInformation() {
+
+        //Layout layout = (Layout) findViewById(R.id.)
+
+        //Layout layout = (Layout) findViewById(R.id.)
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
         // UPDATE totals SET received = received + 1
@@ -157,12 +170,12 @@ public class MainActivity extends AppCompatActivity {
         sentText.setText(sent);
         recText.setText(received);
 
-        Charts.setSMSHistoryChartData(this);
+        setupHistoryChart();
         setTopThree();
     }
 
     // Populate the top three card
-    public void setTopThree() {
+    private void setTopThree() {
 
         try {
             for (int i = 0; i < 6; i++) {
@@ -227,8 +240,92 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // sets up 30 day history chart
+    private void setupHistoryChart() {
+
+        LineSet sentDataset = new LineSet();
+        LineSet receivedDataset = new LineSet();
+
+        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+        String date = Dates.dtfOut.print(new DateTime(DateTimeZone.UTC));
+
+        int days = 31;
+        int step = days / 5;
+        int highestValue = 0;
+        for(int i = days; i >= 0; i--) {
+
+            String new_date = Dates.timeBefore(0, 0, 0, i, 0, 0, 0, date);
+            String last_date = Dates.timeBefore(0, 0, 0, i + 1, 0, 0, 0, date);
+
+            String query = "SELECT * FROM sms_sent WHERE sent_on <= '" + new_date + "' AND sent_on >= '" + last_date + "';";
+            Cursor cr = db.rawQuery(query, null);
+            int sent = cr.getCount();
+            cr.close();
+
+            query = "SELECT * FROM sms_received WHERE received_on <= '" + new_date + "' AND received_on >= '" + last_date + "';";
+            Cursor c = db.rawQuery(query, null);
+            int received = c.getCount();
+            c.close();
+
+            String label = Dates.toDisplay(new_date);
+
+            Log.d("COUNT", label + ", SENT: " + sent + ", RECEIVED: " + received);
+
+            if(i == days) {
+                sentDataset.addPoint("", sent);
+                receivedDataset.addPoint("", received);
+            } else if(i % step == 0) {
+                sentDataset.addPoint(label, sent);
+                receivedDataset.addPoint(label, received);
+            } else {
+                sentDataset.addPoint("", sent);
+                receivedDataset.addPoint("", received);
+            }
+
+            if(sent > highestValue) {
+                highestValue = sent;
+            }
+            if(received > highestValue) {
+                highestValue = received;
+            }
+        }
+
+        highestValue += (highestValue / 20);
+        highestValue -= highestValue % 20;
+        int yStep = highestValue / 4;
+        yStep -= yStep % 20;
+        int rows = highestValue / yStep;
+
+        Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep);
+
+        LineChartView lineChart = (LineChartView) findViewById(R.id.linechart);
+        // as
+
+        receivedDataset.setColor(0x26A69A)
+                .setSmooth(true);
+        sentDataset.setColor(0xE0E0E0)
+                .setSmooth(true);
+
+        lineChart.addData(sentDataset);
+        lineChart.addData(receivedDataset);
+
+        lineChart.setAxisBorderValues(0, highestValue, yStep)
+                .setXAxis(false)
+                .setYAxis(false)
+                .setLabelsColor(Color.WHITE)
+                .setAxisColor(Color.WHITE)
+                .setXLabels(XController.LabelPosition.OUTSIDE)
+                .setYLabels(YController.LabelPosition.OUTSIDE)
+                .setGrid(ChartView.GridType.HORIZONTAL, rows, 1, new Paint())
+                .setAxisLabelsSpacing(50);
+
+        lineChart.show();
+
+    }
+
     // Setup the refresh listener for swipe down
-    public void setupRefreshListener() {
+    private void setupRefreshListener() {
         // Setup refresh layout listener
         final SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.refresh_main);
 
@@ -248,7 +345,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // create or save contacts (run on thread)
-    public void setupContacts() {
+    private void setupContacts() {
 
         final SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
@@ -377,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Setup the ad
-    public void setupAds() {
+    private void setupAds() {
         // Setup mobile ads
         MobileAds.initialize(getApplicationContext(), "ca-app-pub-3940256099942544~3347511713");
 
@@ -386,16 +483,17 @@ public class MainActivity extends AppCompatActivity {
         mAdView.loadAd(adRequest);
     }
 
+    // Launch contacts detail activity
+    public void smsContactsDetailsClick(View view) {
+        Intent intent = new Intent(this, ContactSmsDetailsActivity.class);
+        startActivity(intent);
+    }
+
     // todo remove : used as a testing arena
     public void testClick(View view) {
         Intent intent = new Intent(this, TestActivity.class);
         startActivity(intent);
     }
 
-    // Launch contacts detail activity
-    public void smsContactsDetailsClick(View view) {
 
-        Intent intent = new Intent(this, ContactSmsDetailsActivity.class);
-        startActivity(intent);
-    }
 }
