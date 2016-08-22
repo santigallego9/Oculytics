@@ -57,25 +57,12 @@
                             android:background="#1DB9A6">
 
                             <TextView
-                                android:layout_width="match_parent"
+                                android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:background="#1DB9A6"
-                                android:paddingLeft="10dp"
-                                android:paddingTop="10dp"
-                                android:paddingBottom="5dp"
-                                android:textSize="20sp"
+                                android:padding="10dp"
+                                android:text="Who texts who more?"
                                 android:textColor="@color/white"
-                                android:text="Who texts who more?"/>
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginLeft="10dp"
-                                android:layout_marginStart="10dp"
-                                android:layout_marginRight="10dp"
-                                android:layout_marginEnd="10dp"
-                                android:layout_marginBottom="5dp"
-                                android:background="@color/white"/>
+                                android:textSize="15sp" />
 
                             <com.db.chart.view.BarChartView
                                 xmlns:chart="http://schemas.android.com/apk/res-auto"
@@ -106,28 +93,15 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:padding="5dp"
-                            android:orientation="vertical">
+                            android:orientation="vertical">ter
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
+                                android:padding="10dp"
                                 android:text="Top Ten Contacts"
-                                android:layout_marginTop="5dp"
-                                android:layout_marginBottom="1dp"
-                                android:layout_marginLeft="5dp"
-                                android:padding="5dp"
-                                android:textSize="20sp"
-                                android:textColor="@color/black"/>
-
-                            <View
-                                android:layout_width="match_parent"
-                                android:layout_height="1dp"
-                                android:layout_marginLeft="5dp"
-                                android:layout_marginStart="5dp"
-                                android:layout_marginRight="5dp"
-                                android:layout_marginEnd="5dp"
-                                android:layout_marginBottom="5dp"
-                                android:background="@color/colorPrimary"/>
+                                android:textColor="@color/black"
+                                android:textSize="15sp" />
 
                             <LinearLayout
                                 android:id="@+id/all_contacts_container"
