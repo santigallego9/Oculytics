@@ -18,106 +18,57 @@ public class Dates {
     //  0123456789012345678   ones
     //  0000000000111111111   tens
 
-    final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    public final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static String timeAgo (int yearsAgo, int monthsAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo) {
+    public static String timeAgo (int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo) {
 
         String date = dtfOut.print(new DateTime(DateTimeZone.UTC));
 
-        int years = Integer.parseInt(date.substring(0, 4));
-        int months = Integer.parseInt(date.substring(5, 7));
-        int days = Integer.parseInt(date.substring(8, 10));
-        int hours = Integer.parseInt(date.substring(11, 13));
-        int minutes = Integer.parseInt(date.substring(14, 16));
-        int seconds = Integer.parseInt(date.substring(17));
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-        int new_years = years - yearsAgo;
-        int new_months = months - monthsAgo;
-        int new_days = days - daysAgo;
-        int new_hours = hours - hoursAgo;
-        int new_minutes = minutes - minutesAgo;
-        int new_seconds = seconds - secondsAgo;
+        DateTime time = dtf.parseDateTime(date);
 
-        if (new_years < 0) { new_years = 0; }
-        if (new_months < 0) { new_months = 0; }
-        if (new_days < 0) { new_days = 0; }
-        if (new_hours < 0) { new_hours = 0; }
-        if (new_minutes < 0) { new_minutes = 0; }
-        if (new_seconds < 0) { new_seconds = 0; }
+        time = time.minusSeconds(secondsAgo);
+        time = time.minusMinutes(minutesAgo);
+        time = time.minusHours(hoursAgo);
+        time = time.minusDays(daysAgo);
+        time = time.minusWeeks(weeksAgo);
+        time = time.minusMonths(monthsAgo);
+        time = time.minusYears(yearsAgo);
 
-        String s_years = new_years + "";
-        String s_months = new_months + "";
-        String s_days = new_days + "";
-        String s_hours = new_hours + "";
-        String s_minutes = new_minutes + "";
-        String s_seconds = new_seconds + "";
-
-        if(s_years.length() < 4) {
-            while (s_years.length() < 4) {
-                s_years = "0" + s_years;
-            }
-        }
-
-        if(s_months.length() < 2) { s_months = "0" + s_months; }
-        if(s_days.length() < 2) { s_days = "0" + s_days; }
-        if(s_hours.length() < 2) { s_hours = "0" + s_hours; }
-        if(s_minutes.length() < 2) { s_minutes = "0" + s_minutes; }
-        if(s_seconds.length() < 2) { s_seconds = "0" + s_seconds; }
-
-        String datetime = s_years + "-" + s_months + "-" + s_days + " " + s_hours + ":" + s_minutes + ":" + s_seconds;
-
-        Log.d("DATETIME", datetime);
+        String datetime = dtfOut.print(time);
 
         return datetime;
     }
 
-    public static String timeBefore (int yearsAgo, int monthsAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
+    public static String timeBefore (int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
 
-        int years = Integer.parseInt(date.substring(0, 4));
-        int months = Integer.parseInt(date.substring(5, 7));
-        int days = Integer.parseInt(date.substring(8, 10));
-        int hours = Integer.parseInt(date.substring(11, 13));
-        int minutes = Integer.parseInt(date.substring(14, 16));
-        int seconds = Integer.parseInt(date.substring(17));
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-        int new_years = years - yearsAgo;
-        int new_months = months - monthsAgo;
-        int new_days = days - daysAgo;
-        int new_hours = hours - hoursAgo;
-        int new_minutes = minutes - minutesAgo;
-        int new_seconds = seconds - secondsAgo;
+        DateTime time = dtf.parseDateTime(date);
 
-        if (new_years < 0) { new_years = 0; }
-        if (new_months < 0) { new_months = 0; }
-        if (new_days < 0) { new_days = 0; }
-        if (new_hours < 0) { new_hours = 0; }
-        if (new_minutes < 0) { new_minutes = 0; }
-        if (new_seconds < 0) { new_seconds = 0; }
+        time = time.minusSeconds(secondsAgo);
+        time = time.minusMinutes(minutesAgo);
+        time = time.minusHours(hoursAgo);
+        time = time.minusDays(daysAgo);
+        time = time.minusWeeks(weeksAgo);
+        time = time.minusMonths(monthsAgo);
+        time = time.minusYears(yearsAgo);
 
-        String s_years = new_years + "";
-        String s_months = new_months + "";
-        String s_days = new_days + "";
-        String s_hours = new_hours + "";
-        String s_minutes = new_minutes + "";
-        String s_seconds = new_seconds + "";
-
-        if(s_years.length() < 4) {
-            while (s_years.length() < 4) {
-                s_years = "0" + s_years;
-            }
-        }
-
-        if(s_months.length() < 2) { s_months = "0" + s_months; }
-        if(s_days.length() < 2) { s_days = "0" + s_days; }
-        if(s_hours.length() < 2) { s_hours = "0" + s_hours; }
-        if(s_minutes.length() < 2) { s_minutes = "0" + s_minutes; }
-        if(s_seconds.length() < 2) { s_seconds = "0" + s_seconds; }
-
-        String datetime = s_years + "-" + s_months + "-" + s_days + " " + s_hours + ":" + s_minutes + ":" + s_seconds;
-
-        Log.d("DATETIME", datetime);
+        String datetime = dtfOut.print(time);
 
         return datetime;
+    }
+
+    public static String toDisplay(String date) {
+
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("MMM dd");
+
+        DateTime time = dtfOut.parseDateTime(date);
+
+        date = dtf.print(time);
+
+        return date;
     }
 
     public static String fromUtcToLocal(String date) {
@@ -127,7 +78,7 @@ public class Dates {
 
         int l_hours = Integer.parseInt(local.substring(11, 13));
         int u_hours = Integer.parseInt(utc.substring(11, 13));
-        int d_hours = Integer.parseInt(date.substring(11, 13));
+        int d_hours = Integer.parseInt(date.substring(8, 10));
         int d_days = Integer.parseInt(date.substring(8, 10));
 
         int diff = l_hours - u_hours;
@@ -153,4 +104,18 @@ public class Dates {
     }
 
 
+    public static String formatToMidnight(String date) {
+
+        date = date.substring(0, 11) + "00:00:00";
+
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+
+        DateTime time = dtf.parseDateTime(date);
+
+        time = time.plusDays(1);
+
+        date = dtfOut.print(time);
+
+        return date;
+    }
 }
