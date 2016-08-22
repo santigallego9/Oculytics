@@ -20,6 +20,8 @@ import com.db.chart.view.BarChartView;
 import com.db.chart.view.ChartView;
 import com.db.chart.view.XController;
 import com.db.chart.view.YController;
+import com.db.chart.view.animation.Animation;
+import com.db.chart.view.animation.easing.LinearEase;
 import com.santigallego.oculytics.helpers.Contacts;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
@@ -88,6 +90,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                         // This method performs the actual data-refresh operation.
                         // The method calls setRefreshing(false) when it's finished.
                         setInformation();
+                        animateCompareChart(R.id.sms_details_chart);
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 }
@@ -119,7 +122,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 String sent = cr.getInt(cr.getColumnIndex("sent")) + "";
                 String received = cr.getInt(cr.getColumnIndex("received")) + "";
 
-                HashMap<String, String> new_contact = Contacts.searchContacts(number, this);
+                HashMap<String, String> new_contact = Contacts.searchContactsUsingNumber(number, this);
 
                 float floatValue = Integer.parseInt(received) - Integer.parseInt(sent);
                 int intValue = Integer.parseInt(received) - Integer.parseInt(sent);
@@ -176,7 +179,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 .addData(dataset);
 
         // show the chart
-        barChart.show();
+        animateCompareChart(R.id.sms_details_chart);
 
         barChart.setOnEntryClickListener(new OnEntryClickListener() {
             @Override
@@ -186,43 +189,17 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
         });
     }
 
-    // TODO update is not currently working
-    public void updateCompareChart() {
+    // animate the chart
+    public void animateCompareChart(int id) {
 
-        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MODE_PRIVATE, null);
+        ChartView chart = (ChartView) findViewById(id);
 
-        BarChartView barChart = (BarChartView) findViewById(R.id.sms_details_chart);
+        Animation animation = new Animation();
 
+        animation.setDuration(1000)
+                .setEasing(new LinearEase());
 
-        BarSet dataset = new BarSet();
-
-        //barChart.(getResources().getColor(R.color.colorAccent));
-
-        //barChart.color
-
-        String query = "SELECT * FROM contacts ORDER BY sent + received DESC LIMIT 3;";
-
-        Cursor cr = db.rawQuery(query, null);
-
-        int i = 0;
-        float values [] = new float[3];
-        if (cr.moveToFirst()) {
-            do {
-                // String number = cr.getString(cr.getColumnIndex("number"));
-                String sent = cr.getInt(cr.getColumnIndex("sent")) + "";
-                String received = cr.getInt(cr.getColumnIndex("received")) + "";
-
-                // HashMap<String, String> new_contact = Contacts.searchContacts(number, this);
-
-                values[i] = Integer.parseInt(received) - Integer.parseInt(sent);
-
-            } while (cr.moveToNext());
-            cr.close();
-        }
-
-        barChart.updateValues(0, values);
-
-        barChart.notifyDataUpdate();
+        chart.show(animation);
 
     }
 
