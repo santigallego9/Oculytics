@@ -25,6 +25,10 @@ import com.db.chart.view.ChartView;
 import com.db.chart.view.LineChartView;
 import com.db.chart.view.XController;
 import com.db.chart.view.YController;
+import com.db.chart.view.animation.Animation;
+import com.db.chart.view.animation.easing.BounceEase;
+import com.db.chart.view.animation.easing.LinearEase;
+import com.db.chart.view.animation.style.DashAnimation;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
@@ -32,6 +36,7 @@ import com.google.android.gms.ads.MobileAds;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Dates;
+import com.santigallego.oculytics.helpers.MathHelper;
 import com.santigallego.oculytics.helpers.PhoneNumbers;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
 import com.santigallego.oculytics.services.ObserverService;
@@ -114,9 +119,12 @@ public class MainActivity extends AppCompatActivity {
 
     // Setup ALL information.
     private void setInformation() {
+        setTotals();
+        setupHistoryChart();
+        setTopThree();
+    }
 
-        //Layout layout = (Layout) findViewById(R.id.)
-
+    private void setTotals() {
         //Layout layout = (Layout) findViewById(R.id.)
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
@@ -169,9 +177,6 @@ public class MainActivity extends AppCompatActivity {
 
         sentText.setText(sent);
         recText.setText(received);
-
-        setupHistoryChart();
-        setTopThree();
     }
 
     // Populate the top three card
@@ -240,6 +245,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Set animation for charts
+    private void smsHistoryChartAnimation(int id) {
+
+        ChartView chart = (ChartView) findViewById(id);
+
+        Animation animation = new Animation();
+
+        animation.setDuration(1000)
+                .setEasing(new LinearEase());
+
+        chart.show(animation);
+    }
+
     // sets up 30 day history chart
     private void setupHistoryChart() {
 
@@ -250,10 +268,14 @@ public class MainActivity extends AppCompatActivity {
 
         String date = Dates.dtfOut.print(new DateTime(DateTimeZone.UTC));
 
+        date = Dates.fromUtcToLocal(date);
+        date = Dates.formatToMidnight(date);
+
         int days = 31;
         int step = days / 5;
         int highestValue = 0;
         for(int i = days; i >= 0; i--) {
+            Log.d("TEST", "ENTERED");
 
             String new_date = Dates.timeBefore(0, 0, 0, i, 0, 0, 0, date);
             String last_date = Dates.timeBefore(0, 0, 0, i + 1, 0, 0, 0, date);
@@ -261,11 +283,13 @@ public class MainActivity extends AppCompatActivity {
             String query = "SELECT * FROM sms_sent WHERE sent_on <= '" + new_date + "' AND sent_on >= '" + last_date + "';";
             Cursor cr = db.rawQuery(query, null);
             int sent = cr.getCount();
+            Log.d("DEBUG", "SENT: " + sent);
             cr.close();
 
             query = "SELECT * FROM sms_received WHERE received_on <= '" + new_date + "' AND received_on >= '" + last_date + "';";
             Cursor c = db.rawQuery(query, null);
             int received = c.getCount();
+            Log.d("DEBUG", "RECEIVED: " + received);
             c.close();
 
             String label = Dates.toDisplay(new_date);
@@ -292,23 +316,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         highestValue += (highestValue / 20);
-        highestValue -= highestValue % 20;
-        int yStep = highestValue / 4;
-        yStep -= yStep % 20;
+        highestValue -= highestValue % 4;
+        if(highestValue < 4) {highestValue = 4;}
+
+        int yStep = (int) MathHelper.gcd(highestValue, 0) / 4;
         int rows = highestValue / yStep;
 
-        Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep);
 
         LineChartView lineChart = (LineChartView) findViewById(R.id.linechart);
-        // as
 
-        receivedDataset.setColor(0x26A69A)
+
+        sentDataset.setColor(0x26A69A)
                 .setSmooth(true);
-        sentDataset.setColor(0xE0E0E0)
+                //.setDashed(new float[]{50f,10f});
+
+        receivedDataset.setFill(Color.WHITE)
                 .setSmooth(true);
 
-        lineChart.addData(sentDataset);
         lineChart.addData(receivedDataset);
+        lineChart.addData(sentDataset);
 
         lineChart.setAxisBorderValues(0, highestValue, yStep)
                 .setXAxis(false)
@@ -320,7 +346,7 @@ public class MainActivity extends AppCompatActivity {
                 .setGrid(ChartView.GridType.HORIZONTAL, rows, 1, new Paint())
                 .setAxisLabelsSpacing(50);
 
-        lineChart.show();
+        smsHistoryChartAnimation(R.id.linechart);
 
     }
 
@@ -488,12 +514,5 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ContactSmsDetailsActivity.class);
         startActivity(intent);
     }
-
-    // todo remove : used as a testing arena
-    public void testClick(View view) {
-        Intent intent = new Intent(this, TestActivity.class);
-        startActivity(intent);
-    }
-
 
 }
