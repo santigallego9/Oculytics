@@ -17,12 +17,10 @@
             app:cardCornerRadius="5dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:focusableInTouchMode="true"
             android:layout_marginBottom="5dp"
             android:background="@color/md_blue"
             android:layout_marginLeft="5dp"
             android:layout_marginRight="5dp"
-            android:onClick="testClick"
             app:cardElevation="2dp">
 
             <LinearLayout
