@@ -8,9 +8,8 @@ import android.net.Uri;
 import android.provider.ContactsContract;
 import android.util.Log;
 
-import com.santigallego.oculytics.activites.MainActivity;
+import com.santigallego.oculytics.activities.MainActivity;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 /*
@@ -54,7 +53,7 @@ public class Contacts {
         return photoUri;
     }
 
-    public static HashMap<String, String> searchContacts(String number, Activity activity) {
+    public static HashMap<String, String> searchContactsUsingNumber(String number, Activity activity) {
 
         SQLiteDatabase db = activity.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
@@ -63,9 +62,7 @@ public class Contacts {
         number = PhoneNumbers.formatNumber(number, false);
         String tempNumber = PhoneNumbers.formatNumber(number, true);
 
-        boolean found = false;
-
-        String query = "SELECT * FROM phone_contacts WHERE number = " + number + ";";
+        String query = "SELECT * FROM phone_contacts WHERE number = \"" + number + "\";";
 
         Cursor cr = db.rawQuery(query, null);
 
@@ -79,7 +76,7 @@ public class Contacts {
             map.put("number", s_phoneNumber);
 
         } else {
-            query = "SELECT * FROM phone_contacts WHERE number = " + tempNumber + ";";
+            query = "SELECT * FROM phone_contacts WHERE number = \"" + tempNumber + "\";";
 
             Cursor c = db.rawQuery(query, null);
 
@@ -97,6 +94,35 @@ public class Contacts {
                 map.put("number", number);
             }
             c.close();
+        }
+        cr.close();
+
+        return map;
+    }
+
+    public static HashMap<String, String> searchContactsUsingName(String name, Activity activity) {
+
+        SQLiteDatabase db = activity.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+        HashMap<String, String> map = new HashMap<>();
+
+        String query = "SELECT * FROM phone_contacts WHERE name = \"" + name + "\";";
+
+        Cursor cr = db.rawQuery(query, null);
+
+        if(cr.moveToFirst()) {
+            String s_phone_id = cr.getString(cr.getColumnIndex("phone_id"));
+            String s_name = cr.getString(cr.getColumnIndex("name"));
+            String s_phoneNumber = cr.getString(cr.getColumnIndex("number"));
+
+            map.put("id", s_phone_id);
+            map.put("name", s_name);
+            map.put("number", s_phoneNumber);
+
+        } else {
+            map.put("id", "-1");
+            map.put("name", name);
+            map.put("number", null);
         }
         cr.close();
 
