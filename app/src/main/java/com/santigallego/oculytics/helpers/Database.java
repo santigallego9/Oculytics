@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 import com.santigallego.oculytics.R;
-import com.santigallego.oculytics.activites.MainActivity;
+import com.santigallego.oculytics.activities.MainActivity;
 
 import java.util.Scanner;
 
