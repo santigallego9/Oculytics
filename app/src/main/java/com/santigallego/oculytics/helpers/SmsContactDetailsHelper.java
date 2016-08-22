@@ -13,10 +13,7 @@ import android.widget.TextView;
 
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.activities.ContactSpecificsActivity;
-import com.santigallego.oculytics.activities.MainActivity;
 import com.squareup.picasso.Picasso;
-
-import org.joda.time.DateTime;
 
 import java.util.HashMap;
 
@@ -26,7 +23,6 @@ import java.util.HashMap;
 public class SmsContactDetailsHelper {
 
     public SmsContactDetailsHelper() {}
-
 
     // Create templates for top three card
     public static void createContactSmsDetails(HashMap<String, String> contact, LinearLayout parent, final Activity activity) {
@@ -99,8 +95,6 @@ public class SmsContactDetailsHelper {
             @Override
             public void onClick(View view) {
 
-                SQLiteDatabase db = activity.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
                 String name = nameView.getText().toString();
 
                 HashMap<String, String> contact = Contacts.searchContactsUsingName(name, activity);
@@ -116,11 +110,9 @@ public class SmsContactDetailsHelper {
                     intent.putExtra("name", contact.get("name"));
                     intent.putExtra("number", contact.get("number"));
                 } else {
-                    contact = Contacts.searchContactsUsingNumber(name, activity);
-
-                    intent.putExtra("id", contact.get("id"));
-                    intent.putExtra("name", contact.get("name"));
-                    intent.putExtra("number", contact.get("number"));
+                    intent.putExtra("id", "-1");
+                    intent.putExtra("name", name);
+                    intent.putExtra("number", name);
                 }
 
                 activity.startActivity(intent);
