@@ -3,13 +3,21 @@ package com.santigallego.oculytics.activities;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,13 +32,17 @@ import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.helpers.Dates;
 import com.santigallego.oculytics.helpers.MathHelper;
+import com.santigallego.oculytics.helpers.ScreenInfo;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
+import cn.refactor.library.ShapeImageView;
+
 public class ContactSpecificsActivity extends AppCompatActivity {
 
     String id, name, number;
+    Bitmap contactImage;
     int contactId;
 
     @Override
@@ -38,6 +50,13 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_specifics);
 
+        setupToolbar();
+        setTotals();
+        setupHistoryChart();
+
+    }
+
+    private void setupToolbar() {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
@@ -46,12 +65,18 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         id = intent.getStringExtra("id");
         name = intent.getStringExtra("name");
         number = intent.getStringExtra("number");
+        byte[] b = intent.getByteArrayExtra("contact_image");
 
-        getSupportActionBar().setTitle(name);
+        contactImage = BitmapFactory.decodeByteArray(b, 0, b.length);
 
-        setTotals();
-        setupHistoryChart();
+        ShapeImageView contactImageView = (ShapeImageView) findViewById(R.id.toolbar_image);
+        TextView contactName = (TextView) findViewById(R.id.toolbar_title);
 
+        contactImageView.setImageBitmap(contactImage);
+        contactName.setText(name);
+
+        getSupportActionBar().setTitle(null);
+        //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
 
     private void setTotals() {
@@ -59,7 +84,7 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
         // UPDATE totals SET received = received + 1
-        String query = "SELECT * FROM contacts WHERE number = " + number + " LIMIT 1;";
+        String query = "SELECT * FROM contacts WHERE number = \"" + number + "\" LIMIT 1;";
 
         Cursor cr = db.rawQuery(query, null);
 
@@ -125,8 +150,8 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         for(int i = days; i >= 0; i--) {
             Log.d("TEST", "ENTERED");
 
-            String new_date = Dates.timeAgo(0, 0, 0, i, 0, 0, 0, date);
-            String last_date = Dates.timeAgo(0, 0, 0, i + 1, 0, 0, 0, date);
+            String new_date = Dates.timeBefore(0, 0, 0, i, 0, 0, 0, date);
+            String last_date = Dates.timeBefore(0, 0, 0, i + 1, 0, 0, 0, date);
 
             String query = "SELECT * FROM sms_sent WHERE sent_on <= '" + new_date + "' AND sent_on >= '" + last_date + "' AND contact_id = " + contactId + ";";
             Cursor cr = db.rawQuery(query, null);
