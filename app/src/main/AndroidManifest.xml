@@ -35,6 +35,20 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".services.PowerConnectionReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".services.BatteryLevelReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_BATTERY_LOW"/>
+                <action android:name="android.intent.action.ACTION_BATTERY_OKAY"/>
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".services.ObserverService"
             android:enabled="true"
@@ -42,13 +56,7 @@
 
         <activity android:name=".activities.TestActivity" />
         <activity android:name=".activities.ContactSmsDetailsActivity" />
-
-        <service
-            android:name=".services.MmsObserver"
-            android:enabled="true"
-            android:exported="true" />
-
-        <activity android:name=".activities.ContactSpecificsActivity"></activity>
+        <activity android:name=".activities.ContactSpecificsActivity" />
     </application>
 
 </manifest>

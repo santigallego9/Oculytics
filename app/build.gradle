@@ -30,4 +30,5 @@ dependencies {
     compile 'com.diogobernardino:williamchart:2.2'
     compile 'com.squareup.picasso:picasso:2.5.2'
     compile 'com.google.code.gson:gson:2.4'
+    compile 'com.github.andyxialm:ShapeImageView:d6c48dffa3'
 }
