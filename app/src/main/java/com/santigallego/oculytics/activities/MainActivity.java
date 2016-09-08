@@ -1,13 +1,18 @@
 package com.santigallego.oculytics.activities;
 
 import android.Manifest;
+import android.app.ActionBar;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.provider.ContactsContract;
+import android.graphics.drawable.ColorDrawable;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -17,6 +22,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -26,9 +33,7 @@ import com.db.chart.view.LineChartView;
 import com.db.chart.view.XController;
 import com.db.chart.view.YController;
 import com.db.chart.view.animation.Animation;
-import com.db.chart.view.animation.easing.BounceEase;
 import com.db.chart.view.animation.easing.LinearEase;
-import com.db.chart.view.animation.style.DashAnimation;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
@@ -37,7 +42,6 @@ import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Dates;
 import com.santigallego.oculytics.helpers.MathHelper;
-import com.santigallego.oculytics.helpers.PhoneNumbers;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
 import com.santigallego.oculytics.services.ObserverService;
 
@@ -51,6 +55,7 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
+    private static ArrayList<Bitmap> bitmaps = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,9 +79,10 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
 
         setupRefreshListener();
-        setupContacts();
         Database.populateDatabase(this);
         setInformation();
+        setupHistoryChart();
+        checkBatteryState();
         setupAds();
     }
 
@@ -120,7 +126,6 @@ public class MainActivity extends AppCompatActivity {
     // Setup ALL information.
     private void setInformation() {
         setTotals();
-        setupHistoryChart();
         setTopThree();
     }
 
@@ -214,7 +219,16 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("sent", sent);
                 contact.put("received", received);
 
-                SmsContactDetailsHelper.createContactSmsDetails(contact, sentLayout, this);
+                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(contact, sentLayout, this);
+                if(bitmap != null) {
+                    bitmaps.add(bitmap);
+                }
+
+                String msg = "NUMBER: " + number + " \n" +
+                             "SENT: " + sent + " \n" +
+                             "RECEIVED: " + received;
+
+                Log.d("COUNT_TOP_THREE", msg);
 
             } while (cr.moveToNext());
             cr.close();
@@ -238,11 +252,29 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("sent", sent);
                 contact.put("received", received);
 
-                SmsContactDetailsHelper.createContactSmsDetails(contact, receivedLayout, this);
+                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(contact, receivedLayout, this);
+                if(bitmap != null) {
+                    bitmaps.add(bitmap);
+                }
+
+                String msg = "NUMBER: " + number + " \n" +
+                             "SENT: " + sent + " \n" +
+                             "RECEIVED: " + received;
+
+                Log.d("COUNT_TOP_THREE", msg);
 
             } while (c.moveToNext());
             c.close();
         }
+    }
+
+    // Clear any bitmaps set for totals
+    private void clearBitmaps() {
+        for(Bitmap bitmap : bitmaps) {
+            bitmap.recycle();
+        }
+
+        bitmaps.clear();
     }
 
     // Set animation for charts
@@ -277,8 +309,8 @@ public class MainActivity extends AppCompatActivity {
         for(int i = days; i >= 0; i--) {
             Log.d("TEST", "ENTERED");
 
-            String new_date = Dates.timeAgo(0, 0, 0, i, 0, 0, 0, date);
-            String last_date = Dates.timeAgo(0, 0, 0, i + 1, 0, 0, 0, date);
+            String new_date = Dates.timeBefore(0, 0, 0, i, 0, 0, 0, date);
+            String last_date = Dates.timeBefore(0, 0, 0, i + 1, 0, 0, 0, date);
 
             String query = "SELECT * FROM sms_sent WHERE sent_on <= '" + new_date + "' AND sent_on >= '" + last_date + "';";
             Cursor cr = db.rawQuery(query, null);
@@ -350,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
 
         smsHistoryChartAnimation(R.id.linechart);
 
+
     }
 
     // Setup the refresh listener for swipe down
@@ -365,140 +398,12 @@ public class MainActivity extends AppCompatActivity {
 
                         // This method performs the actual data-refresh operation.
                         // The method calls setRefreshing(false) when it's finished.
+                        clearBitmaps();
                         setInformation();
                         swipeRefreshLayout.setRefreshing(false);
                     }
                 }
         );
-    }
-
-    // create or save contacts (run on thread)
-    private void setupContacts() {
-
-        final SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
-        String query = "SELECT name FROM sqlite_master WHERE type='table' AND name='phone_contacts'";
-
-        Cursor cr = db.rawQuery(query, null);
-
-        if (cr.moveToFirst()) {
-
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-                    if (cursor != null) {
-                        while (cursor.moveToNext()) {
-                            //try {
-                                String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-                                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                                //String hasPhone = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
-                                if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                                    Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + contactId, null, null);
-                                    if (phones != null) {
-                                        while (phones.moveToNext()) {
-                                            String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                                            phoneNumber = PhoneNumbers.formatNumber(phoneNumber, false);
-
-                                            String new_query = "SELECT * FROM phone_contacts WHERE phone_id = '" + contactId + "' LIMIT 1;";
-
-                                            Cursor c = db.rawQuery(new_query, null);
-
-                                            if(c.moveToFirst()) {
-                                                String s_name = c.getString(c.getColumnIndex("name"));
-                                                String s_phoneNumber = c.getString(c.getColumnIndex("number"));
-
-                                                if(!s_phoneNumber.equals(phoneNumber)) {
-                                                    String updateQuery = "UPDATE phone_contacts SET number = \"" + phoneNumber + "\" WHERE phone_id = '" + contactId + "';";
-                                                    db.execSQL(updateQuery);
-                                                }
-                                                if(!s_name.equals(name)) {
-                                                    String updateQuery = "UPDATE phone_contacts SET name = \"" + name + "\" WHERE phone_id = '" + contactId + "';";
-                                                    db.execSQL(updateQuery);
-                                                }
-                                            } else {
-                                                String insert_query = "INSERT INTO phone_contacts (phone_id, name, number) VALUES ('" + contactId + "', \"" + name + "\", \"" + phoneNumber + "\");";
-
-                                                db.execSQL(insert_query);
-                                            }
-                                            c.close();
-                                        }
-                                        phones.close();
-                                    }
-                                }
-                            //} catch (Exception e) {
-                            //    Log.d("FATAL_ERROR", e.toString());
-                            //}
-                        }
-                    }
-
-                    if(cursor != null) {
-                        cursor.close();
-                    }
-
-                }
-            });
-
-            thread.start();
-
-        } else {
-
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String query = "CREATE TABLE phone_contacts (" +
-                            "id INTEGER PRIMARY KEY, " +
-                            "phone_id TEXT, " +
-                            "name TEXT, " +
-                            "number TEXT, " +
-                            "created_on DATETIME default current_timestamp, " +
-                            "updated_on DATETIME default current_timestamp);";
-
-                    db.execSQL(query);
-
-                    //ContentResolver cr = getContentResolver();
-                    Cursor cursor = getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-                    if (cursor != null) {
-                        while (cursor.moveToNext()) {
-                            //try {
-                                String contactId = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
-                                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                                //String hasPhone = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
-                                if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                                    Cursor phones = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = " + contactId, null, null);
-                                    if (phones != null) {
-                                        while (phones.moveToNext()) {
-                                            String phoneNumber = phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-
-                                            phoneNumber = PhoneNumbers.formatNumber(phoneNumber, false);
-
-                                            query = "INSERT INTO phone_contacts (phone_id, name, number) VALUES ('" + contactId + "', \"" + name + "\", \"" + phoneNumber + "\");";
-
-                                            db.execSQL(query);
-                                        }
-                                        phones.close();
-                                    }
-                                }
-                            //} catch (Exception e) {
-
-                                //Log.d("FATAL_ERROR", e.toString());
-                            //}
-                        }
-                    }
-
-                    if(cursor != null) {
-                        cursor.close();
-                    }
-                }
-            });
-
-            thread.start();
-        }
-
-        cr.close();
-
     }
 
     // Setup the ad
@@ -509,6 +414,67 @@ public class MainActivity extends AppCompatActivity {
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+    }
+
+    // check battery state
+    public void checkBatteryState() {
+        /*Log.d("CHARGING", "ENTERED");
+        if(Build.VERSION.SDK_INT >= 21) {
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = this.registerReceiver(null, ifilter);
+
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                    status == BatteryManager.BATTERY_STATUS_FULL;
+
+            int chargePlug = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+            boolean usbCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_USB;
+            boolean acCharge = chargePlug == BatteryManager.BATTERY_PLUGGED_AC;
+
+            String msg = "CHARGING: " + isCharging + "\n" +
+                    "USB: " + usbCharge + "\n" +
+                    "AC: " + acCharge;
+
+            Log.d("CHARGING", msg);
+
+            ActionBar actionBar = getActionBar();
+
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+            if (isCharging) {
+                if (acCharge) {
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDarkAc));
+                    //setTheme(R.style.AcTheme);
+                } else if (usbCharge) {
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDarkUsb));
+                    //setTheme(R.style.UsbTheme);
+                }
+            } else {
+                int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+                float batteryPct = level / (float) scale;
+
+                if (batteryPct < 5) {
+                    try {
+                        actionBar.setBackgroundDrawable(new ColorDrawable(0xF44336));
+                    } catch (NullPointerException e) {
+                        Log.d("ACTION_BAR_ERROR", e.toString());
+                    }
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDarkCriticalBattery));
+                    //setTheme(R.style.CriticalBatteryAppTheme);
+                } else if (batteryPct < 20) {
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDarkLowBattery));
+                    //setTheme(R.style.LowBatteryTheme);
+                } else {
+                    window.setStatusBarColor(getResources().getColor(R.color.colorPrimaryDark));
+                    //setTheme(R.style.AppTheme);
+                }
+            }
+        }*/
     }
 
     // Launch contacts detail activity
