@@ -1,10 +1,12 @@
 package com.santigallego.oculytics.helpers;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.util.Log;
 
@@ -55,77 +57,90 @@ public class Contacts {
 
     public static HashMap<String, String> searchContactsUsingNumber(String number, Activity activity) {
 
-        SQLiteDatabase db = activity.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> contact = new HashMap<>();
 
         number = PhoneNumbers.formatNumber(number, false);
-        String tempNumber = PhoneNumbers.formatNumber(number, true);
 
-        String query = "SELECT * FROM phone_contacts WHERE number = \"" + number + "\";";
+        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
 
-        Cursor cr = db.rawQuery(query, null);
+        String name = number;
+        boolean failed = true;
 
-        if(cr.moveToFirst()) {
-            String s_phone_id = cr.getString(cr.getColumnIndex("phone_id"));
-            String s_name = cr.getString(cr.getColumnIndex("name"));
-            String s_phoneNumber = cr.getString(cr.getColumnIndex("number"));
+        ContentResolver contentResolver = activity.getContentResolver();
+        Cursor contactLookup = contentResolver.query(uri, new String[] {BaseColumns._ID, ContactsContract.PhoneLookup.NUMBER,
+                ContactsContract.PhoneLookup.DISPLAY_NAME }, null, null, null);
 
-            map.put("id", s_phone_id);
-            map.put("name", s_name);
-            map.put("number", s_phoneNumber);
+        try {
+            if (contactLookup != null && contactLookup.getCount() > 0) {
+                contactLookup.moveToNext();
+                contact.put("id", contactLookup.getString(contactLookup.getColumnIndex(BaseColumns._ID)));
+                contact.put("name", contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.Data.DISPLAY_NAME)));
+                contact.put("number", PhoneNumbers.formatNumber(contactLookup.getString(contactLookup.getColumnIndex(ContactsContract.PhoneLookup.NUMBER)), false));
 
-        } else {
-            query = "SELECT * FROM phone_contacts WHERE number = \"" + tempNumber + "\";";
-
-            Cursor c = db.rawQuery(query, null);
-
-            if(c.moveToFirst()) {
-                String s_phone_id = c.getString(c.getColumnIndex("phone_id"));
-                String s_name = c.getString(c.getColumnIndex("name"));
-                String s_phoneNumber = c.getString(c.getColumnIndex("number"));
-
-                map.put("id", s_phone_id);
-                map.put("name", s_name);
-                map.put("number", s_phoneNumber);
-            } else {
-                map.put("id", "-1");
-                map.put("name", number);
-                map.put("number", number);
+                failed = false;
             }
-            c.close();
+        } finally {
+            if (contactLookup != null) {
+                contactLookup.close();
+            }
         }
-        cr.close();
 
-        return map;
+        if(failed) {
+
+            String tempnumber = PhoneNumbers.formatNumber(number, false);
+
+            uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(tempnumber));
+
+            contentResolver = activity.getContentResolver();
+            Cursor contactLookupNoAreaCode = contentResolver.query(uri, new String[] {BaseColumns._ID, ContactsContract.PhoneLookup.NUMBER,
+                    ContactsContract.PhoneLookup.DISPLAY_NAME }, null, null, null);
+
+            try {
+                if (contactLookupNoAreaCode != null && contactLookupNoAreaCode.getCount() > 0) {
+                    contactLookupNoAreaCode.moveToNext();
+                    contact.put("id", contactLookupNoAreaCode.getString(contactLookupNoAreaCode.getColumnIndex(BaseColumns._ID)));
+                    contact.put("name", contactLookupNoAreaCode.getString(contactLookupNoAreaCode.getColumnIndex(ContactsContract.Data.DISPLAY_NAME)));
+                    contact.put("number", PhoneNumbers.formatNumber(contactLookupNoAreaCode.getString(contactLookupNoAreaCode.getColumnIndex(ContactsContract.PhoneLookup.NUMBER)), false));
+
+                    failed = false;
+                }
+            } finally {
+                if (contactLookupNoAreaCode != null) {
+                    contactLookupNoAreaCode.close();
+                }
+            }
+
+            if(failed) {
+                contact.put("id", "-1");
+                contact.put("name", number);
+                contact.put("number", number);
+            }
+        }
+
+        return contact;
     }
 
     public static HashMap<String, String> searchContactsUsingName(String name, Activity activity) {
 
-        SQLiteDatabase db = activity.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
-        HashMap<String, String> map = new HashMap<>();
+        HashMap<String, String> contact = new HashMap<>();
 
-        String query = "SELECT * FROM phone_contacts WHERE name = \"" + name + "\";";
+        //String number = null;
+        String selection = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME+" like'%" + name +"%'";
+        String[] projection = new String[] { ContactsContract.CommonDataKinds.Phone.NUMBER};
+        Cursor c = activity.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection, selection, null, null);
 
-        Cursor cr = db.rawQuery(query, null);
-
-        if(cr.moveToFirst()) {
-            String s_phone_id = cr.getString(cr.getColumnIndex("phone_id"));
-            String s_name = cr.getString(cr.getColumnIndex("name"));
-            String s_phoneNumber = cr.getString(cr.getColumnIndex("number"));
-
-            map.put("id", s_phone_id);
-            map.put("name", s_name);
-            map.put("number", s_phoneNumber);
-
+        if (c.moveToFirst()) {
+            name = c.getString(0);
+            contact = searchContactsUsingNumber(name, activity);
         } else {
-            map.put("id", "-1");
-            map.put("name", name);
-            map.put("number", null);
+            name = PhoneNumbers.formatNumber(name, false);
+            contact.put("id", "-1");
+            contact.put("name", name);
+            contact.put("number", name);
         }
-        cr.close();
 
-        return map;
+        return contact;
     }
 }
