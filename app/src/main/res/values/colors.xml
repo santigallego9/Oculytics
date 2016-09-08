@@ -1,8 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
+    <!-- Primary Colors -->
+    <color name="colorPrimary">#2196F3</color>
+    <color name="colorPrimaryDark">#1976D2</color>
     <color name="colorAccent">#FF4081</color>
+
+    <!-- AC Charging colors -->
+    <color name="colorPrimaryAc">#2196F3</color>
+    <color name="colorPrimaryDarkAc">#43A047</color>
+    <color name="colorAccentAc">#FF4081</color>
+
+    <!-- USB Charging colors -->
+    <color name="colorPrimaryUsb">#2196F3</color>
+    <color name="colorPrimaryDarkUsb">#DCE775</color>
+    <color name="colorAccentUsb">#FF4081</color>
+
+    <!-- Low Battery Colors -->
+    <color name="colorPrimaryLowBattery">#2196F3</color>
+    <color name="colorPrimaryDarkLowBattery">#D32F2F</color>
+    <color name="colorAccentLowBattery">#FF4081</color>
+
+    <!-- Critical Batter Colors -->
+    <color name="colorPrimaryCriticalBattery">#F44336</color>
+    <color name="colorPrimaryDarkCriticalBattery">#D32F2F</color>
+    <color name="colorAccentCriticalBattery">#FF4081</color>
+
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
     <color name="md_blue">#90CAF9</color>

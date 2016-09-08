@@ -8,4 +8,36 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!-- Charging via AC charger theme. -->
+    <style name="AcTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryAc</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkAc</item>
+        <item name="colorAccent">@color/colorAccentAc</item>
+    </style>
+
+    <!-- Charging via USB charger theme. -->
+    <style name="UsbTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryUsb</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkUsb</item>
+        <item name="colorAccent">@color/colorAccentUsb</item>
+    </style>
+
+    <!-- Low battery theme. -->
+    <style name="LowBatteryTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryLowBattery</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkLowBattery</item>
+        <item name="colorAccent">@color/colorAccentLowBattery</item>
+    </style>
+
+    <!-- Critical Battery theme. -->
+    <style name="CriticalBatteryAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimaryCriticalBattery</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDarkCriticalBattery</item>
+        <item name="colorAccent">@color/colorAccentCriticalBattery</item>
+    </style>
+
 </resources>
