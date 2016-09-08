@@ -24,6 +24,7 @@ CREATE TABLE contacts (
 CREATE TABLE sms_sent (
   id INTEGER PRIMARY KEY,
   contact_id INTEGER,
+  contact_number STRING,
   sent_on DATETIME default current_timestamp
 );
 CREATE TABLE sms_received (
