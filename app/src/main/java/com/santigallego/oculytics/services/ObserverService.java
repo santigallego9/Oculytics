@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import com.santigallego.oculytics.helpers.Database;
+import com.santigallego.oculytics.helpers.Streaks;
 
 import java.util.Set;
 
@@ -74,7 +75,15 @@ public class ObserverService extends Service {
                     id = cr.getInt(cr.getColumnIndex(cr.getColumnName(0)));
 
                     String address = cr.getString(cr.getColumnIndex("address"));
+
+                    int id = Streaks.getContactId(ObserverService.this, address);
+                    if(id != -1) {
+                        Streaks.checkForStreakClear(ObserverService.this, id);
+                    }
                     Database.messageSent(ObserverService.this, address);
+                    id = Streaks.getContactId(ObserverService.this, address);
+                    Streaks.updateStreak(ObserverService.this, id);
+
                     Log.d("OUTGOING", address);
                 } else {
                     Log.d("OUTGOING", "MESSAGE ALREADY LOGGED");
@@ -115,7 +124,15 @@ public class ObserverService extends Service {
                             id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
                             Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
                             Log.d("MMS", "OUTGOING: " + getOutgoingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0)))));
+
+                            int id = Streaks.getContactId(ObserverService.this, address);
+                            if(id != -1) {
+                                Streaks.checkForStreakClear(ObserverService.this, id);
+                            }
                             Database.mmsSent(ObserverService.this, address);
+                            id = Streaks.getContactId(ObserverService.this, address);
+                            Streaks.updateStreak(ObserverService.this, id);
+
                         } else {
                             Log.d("MMS", "ALREADY LOGGED");
                         }
@@ -127,7 +144,15 @@ public class ObserverService extends Service {
                             id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
                             Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
                             Log.d("MMS", "INCOMING: " + getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this));
+
+                            int id = Streaks.getContactId(ObserverService.this, address);
+                            if(id != -1) {
+                                Streaks.checkForStreakClear(ObserverService.this, id);
+                            }
                             Database.mmsReceived(ObserverService.this, address);
+                            id = Streaks.getContactId(ObserverService.this, address);
+                            Streaks.updateStreak(ObserverService.this, id);
+
                         } else {
                             Log.d("MMS", "ALREADY LOGGED");
                         }
