@@ -17,14 +17,20 @@ CREATE TABLE contacts (
   received INTEGER default 0,
   sent_mms INTEGER default 0,
   received_mms INTEGER default 0,
-  streak INTEGER default 0,
   created_on DATETIME default current_timestamp,
-  updated_on DATETIME default current_timestamp
+  updated_on DATETIME default current_timestamp,
+  sent_updated_on DATETIME,
+  received_updated_on DATETIME
+);
+CREATE TABLE streaks (
+  id INTEGER PRIMARY KEY,
+  contact_id INTEGER,
+  streak INTEGER default 1,
+  streak_updated_on DATETIME default current_timestamp
 );
 CREATE TABLE sms_sent (
   id INTEGER PRIMARY KEY,
   contact_id INTEGER,
-  contact_number STRING,
   sent_on DATETIME default current_timestamp
 );
 CREATE TABLE sms_received (
@@ -44,3 +50,8 @@ CREATE TABLE mms_received (
 );
 INSERT INTO totals default VALUES;
 INSERT INTO mms_totals default VALUES;
+
+
+# removed streak from contacts
+# added sent_updated_on and received_updated_on to contacts
+# created table streaks
