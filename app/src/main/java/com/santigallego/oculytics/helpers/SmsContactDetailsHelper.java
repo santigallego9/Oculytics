@@ -51,8 +51,8 @@ public class SmsContactDetailsHelper {
         Display display = activity.getWindowManager().getDefaultDisplay();
         Point size = new Point();
         display.getSize(size);
-        int width = size.x;
-        int height = size.y;
+        final int width = size.x;
+        final int height = size.y;
 
         View smsDetails = activity.getLayoutInflater().inflate(R.layout.contact_sms_details, null);
 
@@ -66,8 +66,12 @@ public class SmsContactDetailsHelper {
 
         String name = Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name");
 
+        Log.d("PICASSO", " ");
+        Log.d("PICASSO", "NAME: " + name + "\nNUMBER: " + contact.get("number") + "\nID: " + Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")));
+
         if (Contacts.hasContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")), activity)) {
             try {
+                Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO");
                 if (ScreenInfo.isPortrait(activity.getResources())) {
                     //Log.d("PICASSO", contacts.get(0).get("id"));
                     Picasso.with(activity)
@@ -84,12 +88,16 @@ public class SmsContactDetailsHelper {
                             .into(contactImage);
                 }
             } catch (Exception e) {
-                Log.d("PICASSO", e.toString());
+                Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO: " + e.toString());
             }
         } else {
             try {
 
+
+
                 if (Character.isLetter(name.charAt(0))) {
+
+                    Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO - LETTER");
 
                     int bitmapSize;
 
@@ -108,6 +116,8 @@ public class SmsContactDetailsHelper {
 
                 } else {
 
+                    Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO - NO LETTER");
+
                     if (ScreenInfo.isPortrait(activity.getResources())) {
                         //Log.d("PICASSO", contacts.get(0).get("id"));
                         Picasso.with(activity)
@@ -125,11 +135,13 @@ public class SmsContactDetailsHelper {
                     }
                 }
             } catch (Exception e) {
-                Log.d("PICASSO", e.toString());
+                Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO " + e.toString());
 
                 e.printStackTrace();
             }
         }
+
+        Log.d("PICASSO", " ");
 
         nameView.setText(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name"));
         sentView.setText(contact.get("sent"));
@@ -162,7 +174,25 @@ public class SmsContactDetailsHelper {
                     intent.putExtra("number", name);
                 }
 
-                Bitmap bitmap = ((BitmapDrawable) contactImg).getBitmap();
+                Bitmap bitmap;
+
+                try {
+                    bitmap = ((BitmapDrawable) contactImg).getBitmap();
+                } catch (NullPointerException e) {
+                    int bitmapSize;
+
+                    if (ScreenInfo.isPortrait(activity.getResources())) {
+                        bitmapSize = width / 8;
+                    } else {
+                        bitmapSize = height / 8;
+                    }
+
+                    bitmap = Bitmap.createBitmap(bitmapSize, bitmapSize, Bitmap.Config.ARGB_8888);
+                    bitmap.eraseColor(activity.getResources().getColor(R.color.md_blue));
+
+                    bitmap = drawTextToBitmap(activity, bitmap, name.substring(0, 1));
+                }
+
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                 byte[] b = baos.toByteArray();
@@ -176,7 +206,7 @@ public class SmsContactDetailsHelper {
         return bitmap;
     }
 
-    public static Bitmap drawTextToBitmap(Activity activity, Bitmap bitmap, String gText) throws IOException {
+    public static Bitmap drawTextToBitmap(Activity activity, Bitmap bitmap, String gText) {
         Resources resources = activity.getResources();
         float scale = resources.getDisplayMetrics().density;
 
