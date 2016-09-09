@@ -9,6 +9,11 @@ import android.util.Log;
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.activities.MainActivity;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import java.util.Scanner;
 
 /*
@@ -19,7 +24,6 @@ public class Database {
     public Database() {}
 
     public static final String DATABASE_NAME = "oculytics";
-
 
     // Create and/or populate the database
     public static void populateDatabase(Activity activity) {
@@ -61,7 +65,7 @@ public class Database {
         if (cr.moveToFirst()) {
             do {
                 int id = cr.getInt(cr.getColumnIndex("id"));
-                updateQuery = "UPDATE contacts SET received = received + 1, updated_on = current_timestamp WHERE number = " + number + ";";
+                updateQuery = "UPDATE contacts SET received = received + 1, updated_on = current_timestamp, received_updated_on = current_timestamp WHERE number = " + number + ";";
                 insertQuery = "INSERT INTO sms_received (contact_id) VALUES (" + id + ");";
                 Log.d("TEXT_MESSAGE", updateQuery);
                 Log.d("TEXT_MESSAGE", insertQuery);
@@ -82,6 +86,8 @@ public class Database {
                     int id = c.getInt(c.getColumnIndex("id"));
                     insertQuery = "INSERT INTO sms_received (contact_id) VALUES (" + id + ");";
                     Log.d("TEXT_MESSAGE", insertQuery);
+                    db.execSQL(insertQuery);
+                    insertQuery = "INSERT INTO streaks (contact_id) VALUES (" + id + ");";
                     db.execSQL(insertQuery);
 
                 } while (c.moveToNext());
@@ -110,7 +116,7 @@ public class Database {
         if (cr.moveToFirst()) {
             do {
                 int id = cr.getInt(cr.getColumnIndex("id"));
-                updateQuery = "UPDATE contacts SET sent = sent + 1, updated_on = current_timestamp WHERE number = " + number + ";";
+                updateQuery = "UPDATE contacts SET sent = sent + 1, updated_on = current_timestamp, sent_updated_on = current_timestamp WHERE number = " + number + ";";
                 insertQuery = "INSERT INTO sms_sent (contact_id) VALUES (" + id + ");";
                 Log.d("TEXT_MESSAGE", updateQuery);
                 Log.d("TEXT_MESSAGE", insertQuery);
@@ -132,6 +138,8 @@ public class Database {
                     int id = c.getInt(c.getColumnIndex("id"));
                     insertQuery = "INSERT INTO sms_sent (contact_id) VALUES (" + id + ");";
                     Log.d("TEXT_MESSAGE", insertQuery);
+                    db.execSQL(insertQuery);
+                    insertQuery = "INSERT INTO streaks (contact_id) VALUES (" + id + ");";
                     db.execSQL(insertQuery);
 
                 } while (c.moveToNext());
@@ -158,7 +166,7 @@ public class Database {
         if (cr.moveToFirst()) {
             do {
                 int id = cr.getInt(cr.getColumnIndex("id"));
-                updateQuery = "UPDATE contacts SET received_mms = received_mms + 1, updated_on = current_timestamp WHERE number = " + number + ";";
+                updateQuery = "UPDATE contacts SET received_mms = received_mms + 1, updated_on = current_timestamp, received_updated_on = current_timestamp WHERE number = " + number + ";";
                 insertQuery = "INSERT INTO mms_received (contact_id) VALUES (" + id + ");";
                 Log.d("MMS", updateQuery);
                 Log.d("MMS", insertQuery);
@@ -178,6 +186,8 @@ public class Database {
                     int id = c.getInt(c.getColumnIndex("id"));
                     insertQuery = "INSERT INTO mms_received (contact_id) VALUES (" + id + ");";
                     Log.d("MMS", insertQuery);
+                    db.execSQL(insertQuery);
+                    insertQuery = "INSERT INTO streaks (contact_id) VALUES (" + id + ");";
                     db.execSQL(insertQuery);
 
                 } while (c.moveToNext());
@@ -208,7 +218,7 @@ public class Database {
         if (cr.moveToFirst()) {
             do {
                 int id = cr.getInt(cr.getColumnIndex("id"));
-                updateQuery = "UPDATE contacts SET sent_mms = sent_mms + 1, updated_on = current_timestamp WHERE number = " + number + ";";
+                updateQuery = "UPDATE contacts SET sent_mms = sent_mms + 1, updated_on = current_timestamp, sent_updated_on = current_timestamp WHERE number = " + number + ";";
                 insertQuery = "INSERT INTO mms_sent (contact_id) VALUES (" + id + ");";
                 Log.d("MMS", updateQuery);
                 Log.d("MMS", insertQuery);
@@ -231,6 +241,8 @@ public class Database {
                     int id = c.getInt(c.getColumnIndex("id"));
                     insertQuery = "INSERT INTO mms_sent (contact_id) VALUES (" + id + ");";
                     Log.d("MMS", insertQuery);
+                    db.execSQL(insertQuery);
+                    insertQuery = "INSERT INTO streaks (contact_id) VALUES (" + id + ");";
                     db.execSQL(insertQuery);
 
                 } while (c.moveToNext());
