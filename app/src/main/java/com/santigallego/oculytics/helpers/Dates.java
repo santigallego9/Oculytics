@@ -20,7 +20,7 @@ public class Dates {
 
     public final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static String timeAgo (int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo) {
+    public static String timeAgo(int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo) {
 
         String date = dtfOut.print(new DateTime(DateTimeZone.UTC));
 
@@ -36,12 +36,10 @@ public class Dates {
         time = time.minusMonths(monthsAgo);
         time = time.minusYears(yearsAgo);
 
-        String datetime = dtfOut.print(time);
-
-        return datetime;
+        return dtfOut.print(time);
     }
 
-    public static String timeBefore (int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
+    public static String timeBefore(int yearsAgo, int monthsAgo, int weeksAgo, int daysAgo, int hoursAgo, int minutesAgo, int secondsAgo, String date) {
 
         DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -55,9 +53,7 @@ public class Dates {
         time = time.minusMonths(monthsAgo);
         time = time.minusYears(yearsAgo);
 
-        String datetime = dtfOut.print(time);
-
-        return datetime;
+        return dtfOut.print(time);
     }
 
     public static String toDisplay(String date) {
