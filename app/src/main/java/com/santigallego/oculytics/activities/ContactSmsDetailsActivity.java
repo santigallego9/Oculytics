@@ -28,6 +28,7 @@ import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Dates;
 import com.santigallego.oculytics.helpers.MathHelper;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
+import com.santigallego.oculytics.helpers.Streaks;
 
 import org.joda.time.DateTime;
 
@@ -217,6 +218,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
             do {
                 HashMap<String, String> contact = new HashMap<>();
 
+                int id = cr.getInt(cr.getColumnIndex("id"));
                 String number = cr.getString(cr.getColumnIndex("number"));
                 String sent = cr.getInt(cr.getColumnIndex("sent")) + "";
                 String received = cr.getInt(cr.getColumnIndex("received")) + "";
@@ -224,6 +226,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 contact.put("number", number);
                 contact.put("sent", sent);
                 contact.put("received", received);
+                contact.put("streak", "" + Streaks.getSteak(this, id));
 
                 SmsContactDetailsHelper.createContactSmsDetails(contact, allLayout, this);
 
