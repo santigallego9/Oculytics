@@ -2,6 +2,7 @@ package com.santigallego.oculytics.activities;
 
 import android.Manifest;
 import android.app.ActionBar;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -26,6 +27,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.db.chart.model.LineSet;
 import com.db.chart.view.ChartView;
@@ -38,16 +40,22 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
+import com.santigallego.oculytics.helpers.Contacts;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Dates;
 import com.santigallego.oculytics.helpers.MathHelper;
+import com.santigallego.oculytics.helpers.PhoneNumbers;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
+import com.santigallego.oculytics.helpers.Streaks;
 import com.santigallego.oculytics.services.ObserverService;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
+import java.security.spec.ECField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     private static ArrayList<Bitmap> bitmaps = new ArrayList<>();
+    public final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +74,249 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
+        String date = dtfOut.print(new DateTime(DateTimeZone.UTC));
+
+        Log.d("TIME_TEST", date);
+
+        DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+
+        DateTime time = dtf.parseDateTime(date);
+
+        Log.d("TIME_TEST", time.toString());
+
+        Log.d("TIME_TEST", dtfOut.print(time));
+        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+        String query = "SELECT * FROM streaks;";
+
+        Cursor ca = db.rawQuery(query, null);
+
+        /*if(ca.moveToFirst()) {
+            do {
+                String update_query = "UPDATE streaks SET streak = 0, streak_updated_on = current_timestamp";
+                db.execSQL(update_query);
+            } while(ca.moveToNext());
+        }*/
+        ca.close();
+
         startupFunctions();
+
+
+        query = "SELECT * FROM contacts;";
+
+        Cursor cr = db.rawQuery(query, null);
+
+        if(cr.moveToFirst()) {
+            do {
+                int id = cr.getInt(cr.getColumnIndex("id"));
+                String number = cr.getString(cr.getColumnIndex("number"));
+                int sent = cr.getInt(cr.getColumnIndex("sent"));
+                int received = cr.getInt(cr.getColumnIndex("received"));
+                int sent_mms = cr.getInt(cr.getColumnIndex("sent_mms"));
+                int received_mms = cr.getInt(cr.getColumnIndex("received_mms"));
+                String created_on = cr.getString(cr.getColumnIndex("created_on"));
+                String updated_on = cr.getString(cr.getColumnIndex("updated_on"));
+                String sent_updated_on = cr.getString(cr.getColumnIndex("sent_updated_on"));
+                String received_updated_on = cr.getString(cr.getColumnIndex("received_updated_on"));
+
+                String new_query = "SELECT * FROM streaks WHERE contact_id = " + id + " LIMIT 1;";
+
+                Cursor c = db.rawQuery(new_query, null);
+
+                if(c.moveToFirst()) {
+
+                    String streak_updated = c.getString(c.getColumnIndex("streak_updated_on"));
+
+                    Log.d("SQL_TEST", " ");
+                    Log.d("SQL_TEST", "ID: " + id);
+                    Log.d("SQL_TEST", "NAME: " + Contacts.searchContactsUsingNumber(number, this).get("name"));
+                    Log.d("SQL_TEST", "NUMBER: " + number);
+                    Log.d("SQL_TEST", "SENT: " + sent);
+                    Log.d("SQL_TEST", "RECEIVED: " + received);
+                    Log.d("SQL_TEST", "SENT MMS: " + sent_mms);
+                    Log.d("SQL_TEST", "RECEIVED MMS: " + received_mms);
+                    Log.d("SQL_TEST", "CREATED ON: " + created_on);
+                    Log.d("SQL_TEST", "UPDATED ON: " + updated_on);
+                    Log.d("SQL_TEST", "SENT UPDATED ON: " + sent_updated_on);
+                    Log.d("SQL_TEST", "RECEIVED UPDATED ON: " + received_updated_on);
+                    Log.d("SQL_TEST", "-----------------------");
+                    Log.d("SQL_TEST", "STREAK UPDATED ON: " + streak_updated);
+                    Log.d("SQL_TEST", " ");
+                }
+                c.close();
+
+
+            } while(cr.moveToNext());
+        }
+        cr.close();
+    }
+
+    public void updateDB() {
+        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+        //db.execSQL("DROP TABLE streaks;");
+        //db.execSQL("CREATE TABLE streaks (id INTEGER PRIMARY KEY, contact_id INTEGER, streak INTEGER default 1, streak_updated_on DATETIME default current_timestamp);");
+
+        try {
+            db.execSQL("DROP TABLE streaks;");
+            //db.execSQL("ALTER TABLE contacts ADD COLUMN sent_updated_on DATETIME;");
+            //db.execSQL("ALTER TABLE contacts ADD COLUMN received_updated_on DATETIME;");
+
+            db.execSQL("CREATE TABLE streaks (id INTEGER PRIMARY KEY, contact_id INTEGER, streak INTEGER default 1, streak_updated_on DATETIME default current_timestamp);");
+        } catch (Exception e) {
+            Log.d("FAILED", "CREATE: " + e.toString());
+        }
+
+        String query = "SELECT * FROM contacts;";
+
+        Cursor cr = db.rawQuery(query, null);
+
+        if(cr.moveToFirst()) {
+            do {
+                String updatedOn = cr.getString(cr.getColumnIndex("updated_on"));
+                int id = cr.getInt(cr.getColumnIndex("id"));
+
+
+                String sms_sent_on = getStreakInfo(id, "sms_sent", "sent_on");
+                String sms_received_on = getStreakInfo(id, "sms_received", "received_on");
+                String mms_sent_on = getStreakInfo(id, "mms_sent", "sent_on");
+                String mms_received_on = getStreakInfo(id, "mms_received", "received_on");
+
+                DateTime sent_on = null, received_on = null;
+
+                boolean sms_sent = false, sms_received = false, mms_sent = false, mms_received = false, sent = true, received = true;
+
+                DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+
+                DateTime dt_sms_sent_on = null, dt_sms_received_on = null, dt_mms_sent_on = null, dt_mms_received_on = null;
+
+                if(sms_sent_on.length() > 0) {
+                    dt_sms_sent_on = dtf.parseDateTime(sms_sent_on);
+                    sms_sent = true;
+                }
+
+                if(sms_received_on.length() > 0) {
+                    dt_sms_received_on = dtf.parseDateTime(sms_received_on);
+                    sms_received = true;
+                }
+
+                if(mms_sent_on.length() > 0) {
+                    dt_mms_sent_on = dtf.parseDateTime(mms_sent_on);
+                    mms_sent = true;
+                }
+
+                if(mms_received_on.length() > 0) {
+                    dt_mms_received_on = dtf.parseDateTime(mms_received_on);
+                    mms_received = true;
+                }
+
+                if(sms_sent && mms_sent) {
+                    boolean sms = dt_sms_sent_on.isAfter(dt_mms_sent_on);
+                    if(sms) {
+                        sent_on = dt_sms_sent_on;
+                    } else {
+                        sent_on = dt_mms_sent_on;
+                    }
+                } else if (sms_sent && !mms_sent) {
+                    sent_on = dt_sms_sent_on;
+                } else if (!sms_sent && mms_sent){
+                    sent_on = dt_mms_sent_on;
+                } else {
+                    sent = false;
+                }
+
+                if(sms_received && mms_received) {
+                    boolean sms = dt_sms_received_on.isAfter(dt_mms_received_on);
+                    if(sms) {
+                        received_on = dt_sms_received_on;
+                    } else {
+                        received_on = dt_mms_received_on;
+                    }
+                } else if (sms_received && !mms_received) {
+                    received_on = dt_sms_sent_on;
+                } else if (!sms_received && mms_received){
+                    received_on = dt_mms_sent_on;
+                } else {
+                    received = false;
+                }
+
+                String updateQuery;
+
+                if(sent && received) {
+                    updateQuery = "UPDATE contacts SET sent_updated_on = \"" + dtfOut.print(sent_on) + "\", received_updated_on = \"" + dtfOut.print(received_on) + "\";";
+                } else if (!sent && received) {
+                    updateQuery = "UPDATE contacts SET received_updated_on = \"" + dtfOut.print(received_on) + "\";";
+                } else {
+                    updateQuery = "UPDATE contacts SET sent_updated_on = \"" + dtfOut.print(sent_on) + "\";";
+                }
+
+                try {
+                    db.execSQL(updateQuery);
+                } catch (Exception e) {
+                    Log.d("FAILED", "UPDATE contacts: " + e.toString());
+                }
+
+
+                String insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", \"" + updatedOn + "\");";
+                try {
+                    db.execSQL(insertQuery);
+                } catch (Exception e) {
+                    Log.d("FAILED", "INSERT INTO streaks: " + e.toString());
+                }
+            } while (cr.moveToNext());
+        }
+    }
+
+    private void checkStreaks() {
+
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                SQLiteDatabase db = MainActivity.this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+                String query = "SELECT * FROM contacts;";
+
+                Cursor cr = db.rawQuery(query, null);
+
+
+                if(cr.moveToFirst()) {
+                    do {
+                        int id = cr.getInt(cr.getColumnIndex("id"));
+                        String number = cr.getString(cr.getColumnIndex("number"));
+
+                        Streaks.checkForStreakClear(MainActivity.this, id);
+                        Streaks.updateStreak(MainActivity.this, id);
+
+                    } while(cr.moveToNext());
+                }
+            }
+        };
+        thread.run();
+    }
+
+    private String getStreakInfo(int id, String table_name, String column_name) {
+        String timestamp;
+
+        try {
+            SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+            String query = "SELECT * FROM '" + table_name + "' WHERE contact_id = " + id + " ORDER BY '" + column_name + "' DESC LIMIT 1";
+
+            Cursor cr = db.rawQuery(query, null);
+
+            if (cr.moveToFirst()) {
+                do {
+                    timestamp = cr.getString(cr.getColumnIndex(column_name));
+                } while (cr.moveToNext());
+                cr.close();
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            return "";
+        }
+
+        return timestamp;
     }
 
     // Run all startup functions SHOULD NOT be called as a refresh
@@ -125,6 +376,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Setup ALL information.
     private void setInformation() {
+        checkStreaks();
         setTotals();
         setTopThree();
     }
@@ -211,6 +463,7 @@ public class MainActivity extends AppCompatActivity {
             do {
                 HashMap<String, String> contact = new HashMap<>();
 
+                int id = cr.getInt(cr.getColumnIndex("id"));
                 String number = cr.getString(cr.getColumnIndex("number"));
                 String sent = cr.getInt(cr.getColumnIndex("sent")) + "";
                 String received = cr.getInt(cr.getColumnIndex("received")) + "";
@@ -218,6 +471,7 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("number", number);
                 contact.put("sent", sent);
                 contact.put("received", received);
+                contact.put("streak", "" + Streaks.getSteak(this, id));
 
                 Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(contact, sentLayout, this);
                 if(bitmap != null) {
@@ -244,6 +498,7 @@ public class MainActivity extends AppCompatActivity {
             do {
                 HashMap<String, String> contact = new HashMap<>();
 
+                int id = c.getInt(cr.getColumnIndex("id"));
                 String number = c.getString(c.getColumnIndex("number"));
                 String sent = c.getInt(c.getColumnIndex("sent")) + "";
                 String received = c.getInt(c.getColumnIndex("received")) + "";
@@ -251,6 +506,7 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("number", number);
                 contact.put("sent", sent);
                 contact.put("received", received);
+                contact.put("streak", "" + Streaks.getSteak(this, id));
 
                 Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(contact, receivedLayout, this);
                 if(bitmap != null) {
