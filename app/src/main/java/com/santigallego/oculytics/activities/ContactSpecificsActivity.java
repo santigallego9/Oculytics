@@ -33,6 +33,7 @@ import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.helpers.Dates;
 import com.santigallego.oculytics.helpers.MathHelper;
 import com.santigallego.oculytics.helpers.ScreenInfo;
+import com.santigallego.oculytics.helpers.Streaks;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -73,7 +74,8 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         TextView contactName = (TextView) findViewById(R.id.toolbar_title);
 
         contactImageView.setImageBitmap(contactImage);
-        contactName.setText(name);
+        String title = name + "  -  Streak: " + Streaks.getSteak(this, Streaks.getContactId(this, number));
+        contactName.setText(title);
 
         getSupportActionBar().setTitle(null);
         //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -140,6 +142,8 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
         String date = Dates.dtfOut.print(new DateTime(DateTimeZone.UTC));
+
+        Log.d("TIMETEST", date);
 
         date = Dates.fromUtcToLocal(date);
         date = Dates.formatToMidnight(date);
