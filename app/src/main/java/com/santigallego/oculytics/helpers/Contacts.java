@@ -12,6 +12,7 @@ import android.util.Log;
 
 import com.santigallego.oculytics.activities.MainActivity;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /*
@@ -142,5 +143,27 @@ public class Contacts {
         }
 
         return contact;
+    }
+
+    public static ArrayList<HashMap<String, String>> searchMultipleContactsUsingName(String name, Activity activity) {
+
+        ArrayList<HashMap<String, String>> contacts = new ArrayList<>();
+        HashMap<String, String> contact = new HashMap<>();
+
+        //String number = null;
+        String selection = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME+" like'%" + name +"%'";
+        String[] projection = new String[] { ContactsContract.CommonDataKinds.Phone.NUMBER};
+        Cursor c = activity.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                projection, selection, null, null);
+
+        if (c.moveToFirst()) {
+            do {
+                name = c.getString(0);
+                contact = searchContactsUsingNumber(name, activity);
+                contacts.add(contact);
+            } while (c.moveToNext());
+        }
+
+        return contacts;
     }
 }
