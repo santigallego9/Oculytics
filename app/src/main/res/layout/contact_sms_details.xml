@@ -14,18 +14,49 @@
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:padding="5dp">
+            android:layout_height="match_parent">
 
-            <cn.refactor.library.ShapeImageView
-                android:id="@+id/contact_image"
-                android:padding="5dp"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                app:shape="Circle"
-                app:borderWidth="1dp"
-                app:borderColor="@color/md_blue" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center">
+
+                <LinearLayout
+                    android:id="@+id/icons_linear_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingLeft="5dp">
+
+                    <cn.refactor.library.ShapeImageView
+                        android:id="@+id/contact_image"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center|start"
+                        android:layout_marginEnd="6dp"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginBottom="6dp"
+                        app:shape="Circle"
+                        app:borderWidth="1dp"
+                        app:backgroundColor="@color/white"
+                        app:borderColor="@color/md_blue" />
+
+
+                </LinearLayout>
+
+                <cn.refactor.library.ShapeImageView
+                    android:id="@+id/streak"
+                    app:backgroundColor="#80000000"
+                    app:textSize="12sp"
+                    android:layout_alignTop="@id/icons_linear_layout"
+                    android:layout_alignEnd="@id/icons_linear_layout"
+                    android:layout_alignRight="@id/icons_linear_layout"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:layout_gravity="center"
+                    app:shape="Circle" />
+
+            </RelativeLayout>
 
         </LinearLayout>
 
@@ -33,7 +64,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="10dp">
+            android:paddingTop="10dp"
+            android:paddingLeft="3dp"
+            android:paddingBottom="10dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"

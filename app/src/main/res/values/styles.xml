@@ -1,8 +1,24 @@
 <resources>
 
+
+    <style name="textStyle">
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="MyToolbarStyle" parent="ThemeOverlay.AppCompat.ActionBar">
+        <!-- Used to for the title of the Toolbar -->
+        <item name="android:textColorPrimary">#fff</item>
+        <item name="android:actionMenuTextColor">#FFF</item>
+        <item name="android:itemTextAppearance">@style/textStyle</item>
+        <!-- Used to color the text of the action menu icons -->
+        <item name="android:textColorSecondary">#455a64</item>
+        <!-- Used to color the overflow menu icon -->
+        <item name="actionMenuTextColor">#fff</item>
+    </style>
+
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <!-- Customize your theme here. -->
+        <item name="actionMenuTextColor">#fff</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>

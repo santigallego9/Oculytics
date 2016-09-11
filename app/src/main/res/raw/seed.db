@@ -50,8 +50,3 @@ CREATE TABLE mms_received (
 );
 INSERT INTO totals default VALUES;
 INSERT INTO mms_totals default VALUES;
-
-
-# removed streak from contacts
-# added sent_updated_on and received_updated_on to contacts
-# created table streaks
