@@ -74,7 +74,7 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         TextView contactName = (TextView) findViewById(R.id.toolbar_title);
 
         contactImageView.setImageBitmap(contactImage);
-        String title = name + "  -  Streak: " + Streaks.getSteak(this, Streaks.getContactId(this, number));
+        String title = name + "  -  \uD83D\uDD25" + Streaks.getStreak(this, Streaks.getContactId(this, number));
         contactName.setText(title);
 
         getSupportActionBar().setTitle(null);
@@ -118,6 +118,8 @@ public class ContactSpecificsActivity extends AppCompatActivity {
 
         sentText.setText(sent);
         recText.setText(received);
+
+        db.close();
     }
 
     // Set animation for charts
@@ -143,7 +145,7 @@ public class ContactSpecificsActivity extends AppCompatActivity {
 
         String date = Dates.dtfOut.print(new DateTime(DateTimeZone.UTC));
 
-        Log.d("TIMETEST", date);
+        // Log.d("TIMETEST", date);
 
         date = Dates.fromUtcToLocal(date);
         date = Dates.formatToMidnight(date);
@@ -152,7 +154,7 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         int step = days / 5;
         int highestValue = 0;
         for(int i = days; i >= 0; i--) {
-            Log.d("TEST", "ENTERED");
+            // Log.d("TEST", "ENTERED");
 
             String new_date = Dates.timeBefore(0, 0, 0, i, 0, 0, 0, date);
             String last_date = Dates.timeBefore(0, 0, 0, i + 1, 0, 0, 0, date);
@@ -160,18 +162,18 @@ public class ContactSpecificsActivity extends AppCompatActivity {
             String query = "SELECT * FROM sms_sent WHERE sent_on <= '" + new_date + "' AND sent_on >= '" + last_date + "' AND contact_id = " + contactId + ";";
             Cursor cr = db.rawQuery(query, null);
             int sent = cr.getCount();
-            Log.d("DEBUG", "SENT: " + sent);
+            // Log.d("DEBUG", "SENT: " + sent);
             cr.close();
 
             query = "SELECT * FROM sms_received WHERE received_on <= '" + new_date + "' AND received_on >= '" + last_date + "' AND contact_id = " + contactId + ";";
             Cursor c = db.rawQuery(query, null);
             int received = c.getCount();
-            Log.d("DEBUG", "RECEIVED: " + received);
+            // Log.d("DEBUG", "RECEIVED: " + received);
             c.close();
 
             String label = Dates.toDisplay(new_date);
 
-            Log.d("COUNT", label + ", SENT: " + sent + ", RECEIVED: " + received);
+            // Log.d("COUNT", label + ", SENT: " + sent + ", RECEIVED: " + received);
 
             if(i == days) {
                 sentDataset.addPoint("", sent);
@@ -198,7 +200,7 @@ public class ContactSpecificsActivity extends AppCompatActivity {
 
         int yStep = (int) MathHelper.gcd(highestValue, 0) / 6;
 
-        Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep);
+        // Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep);
         int rows = highestValue / yStep;
 
 
@@ -226,6 +228,8 @@ public class ContactSpecificsActivity extends AppCompatActivity {
                 .setAxisLabelsSpacing(50);
 
         smsHistoryChartAnimation(R.id.linechart);
+
+        db.close();
 
     }
 }

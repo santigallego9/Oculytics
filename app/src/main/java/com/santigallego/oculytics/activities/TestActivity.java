@@ -40,7 +40,7 @@ public class TestActivity extends AppCompatActivity {
             do {
                 int total_sent = cr.getInt(cr.getColumnIndex("sent"));
                 int total_received = cr.getInt(cr.getColumnIndex("received"));
-                Log.d("TEXT_MESSAGE", "RECEIVED: " + total_received +  ", SENT: " + total_sent);
+                // Log.d("TEXT_MESSAGE", "RECEIVED: " + total_received +  ", SENT: " + total_sent);
                 totals = "RECEIVED: " + total_received + "\nSENT: " + total_sent;
             } while (cr.moveToNext());
             cr.close();
@@ -60,7 +60,7 @@ public class TestActivity extends AppCompatActivity {
                 String updated_on = cr.getString(cr.getColumnIndex("updated_on"));
                 String text = "ID: " + id + ", NUMBER: " + number + ", REC: " + received + ", SENT: " + sent + ", CREATED_ON: " + created_on + ", UPDATED_ON: " + updated_on;
                 contacts += text + "\n\n";
-                Log.d("TEXT_MESSAGE", text);
+                // Log.d("TEXT_MESSAGE", text);
             } while (cr.moveToNext());
             cr.close();
         }
@@ -76,7 +76,7 @@ public class TestActivity extends AppCompatActivity {
                 String received_on = cr.getString(cr.getColumnIndex("received_on"));
                 String text = "ID: " + id + ", CONTACT_ID: " + contact_id + ", RECEIVED_ON: " + received_on;
                 sms_received += text + "\n\n";
-                Log.d("TEXT_MESSAGE", text);
+                // Log.d("TEXT_MESSAGE", text);
             } while (cr.moveToNext());
             cr.close();
         }
@@ -92,7 +92,7 @@ public class TestActivity extends AppCompatActivity {
                 String sent_on = cr.getString(cr.getColumnIndex("sent_on"));
                 String text = "ID: " + id + ", CONTACT_ID: " + contact_id + ", SENT_ON: " + sent_on;
                 sms_sent += text + "\n\n";
-                Log.d("TEXT_MESSAGE", text);
+                // Log.d("TEXT_MESSAGE", text);
             } while (cr.moveToNext());
             cr.close();
         }
@@ -104,6 +104,8 @@ public class TestActivity extends AppCompatActivity {
         TextView queryView = (TextView) findViewById(R.id.query_text);
 
         queryView.setText(final_text);
+
+        db.close();
     }
 
     public void sendText(View view) {
@@ -139,6 +141,8 @@ public class TestActivity extends AppCompatActivity {
         TextView textView = (TextView) findViewById(R.id.query_text);
 
         textView.setText(sent_on);
+
+        db.close();
 
     }
 

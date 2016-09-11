@@ -40,7 +40,7 @@ public class ObserverService extends Service {
         //ContentResolver contentResolver = this.getContentResolver();
         //contentResolver.registerContentObserver(Uri.parse("content://sms"),true, new SmsObserver(new Handler()));
 
-        Log.d("OUTGOING", "RUNNING SERVICE");
+        // Log.d("OUTGOING", "RUNNING SERVICE");
 
         return START_STICKY; // stay running
     }
@@ -84,9 +84,9 @@ public class ObserverService extends Service {
                     id = Streaks.getContactId(ObserverService.this, address);
                     Streaks.updateStreak(ObserverService.this, id);
 
-                    Log.d("OUTGOING", address);
+                    // Log.d("OUTGOING", address);
                 } else {
-                    Log.d("OUTGOING", "MESSAGE ALREADY LOGGED");
+                    // Log.d("OUTGOING", "MESSAGE ALREADY LOGGED");
                 }
             };
 
@@ -122,8 +122,8 @@ public class ObserverService extends Service {
                     if(address.length() > 1) {
                         if(id != Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))))) {
                             id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            Log.d("MMS", "OUTGOING: " + getOutgoingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0)))));
+                            // Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
+                            // Log.d("MMS", "OUTGOING: " + getOutgoingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0)))));
 
                             int id = Streaks.getContactId(ObserverService.this, address);
                             if(id != -1) {
@@ -134,7 +134,7 @@ public class ObserverService extends Service {
                             Streaks.updateStreak(ObserverService.this, id);
 
                         } else {
-                            Log.d("MMS", "ALREADY LOGGED");
+                            // Log.d("MMS", "ALREADY LOGGED");
                         }
                     }
                 } else {
@@ -142,8 +142,8 @@ public class ObserverService extends Service {
                     if(address.length() > 1) {
                         if(id != Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))))) {
                             id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            Log.d("MMS", "INCOMING: " + getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this));
+                            // Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
+                            // Log.d("MMS", "INCOMING: " + getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this));
 
                             int id = Streaks.getContactId(ObserverService.this, address);
                             if(id != -1) {
@@ -154,12 +154,12 @@ public class ObserverService extends Service {
                             Streaks.updateStreak(ObserverService.this, id);
 
                         } else {
-                            Log.d("MMS", "ALREADY LOGGED");
+                            // Log.d("MMS", "ALREADY LOGGED");
                         }
                     }
                 }
             } catch (Exception e) {
-                Log.d("MMS", "BROKE DOWN");
+                // Log.d("MMS", "BROKE DOWN");
             }
 
             cr.close();

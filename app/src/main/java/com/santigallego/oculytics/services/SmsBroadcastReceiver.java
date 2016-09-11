@@ -34,6 +34,6 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         id = Streaks.getContactId(context, address);
         Streaks.updateStreak(context, id);
 
-        Log.d("TEXT_MESSAGE", msgText);
+        // Log.d("TEXT_MESSAGE", msgText);
     }
 }

@@ -58,11 +58,11 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
 
             String text = Dates.toDisplay(test);
 
-            Log.d("DATETIME_TEST", "TEST:  " + text);
+            // Log.d("DATETIME_TEST", "TEST:  " + text);
 
 
         } catch (Exception e) {
-            Log.d("DATETIME_TEST", e.toString());
+            // Log.d("DATETIME_TEST", e.toString());
         }
 
         startupFunctions();
@@ -87,7 +87,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 new SwipeRefreshLayout.OnRefreshListener() {
                     @Override
                     public void onRefresh() {
-                        Log.i("REFRESH", "onRefresh called from SwipeRefreshLayout");
+                        // Log.i("REFRESH", "onRefresh called from SwipeRefreshLayout");
 
                         // This method performs the actual data-refresh operation.
                         // The method calls setRefreshing(false) when it's finished.
@@ -157,7 +157,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
 
         int rows = highestValue / yStep * 2;
 
-        Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep + " ROWS: " + rows);
+        // Log.d("HIGH", "HIGH: " + highestValue + " STEP: " + yStep + " ROWS: " + rows);
 
         Paint paint = new Paint();
         paint.setColor(Color.WHITE);
@@ -188,6 +188,8 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 Toast.makeText(ContactSmsDetailsActivity.this, "Difference: " + entries[entryIndex], Toast.LENGTH_SHORT).show();
             }
         });
+
+        db.close();
     }
 
     // animate the chart
@@ -226,7 +228,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 contact.put("number", number);
                 contact.put("sent", sent);
                 contact.put("received", received);
-                contact.put("streak", "" + Streaks.getSteak(this, id));
+                contact.put("streak", "" + Streaks.getStreak(this, id));
 
                 SmsContactDetailsHelper.createContactSmsDetails(contact, allLayout, this);
 
@@ -234,5 +236,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
             } while (cr.moveToNext());
             cr.close();
         }
+
+        db.close();
     }
 }

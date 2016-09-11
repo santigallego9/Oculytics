@@ -57,21 +57,22 @@ public class SmsContactDetailsHelper {
         View smsDetails = activity.getLayoutInflater().inflate(R.layout.contact_sms_details, null);
 
         final ShapeImageView contactImage = (ShapeImageView) smsDetails.findViewById(R.id.contact_image);
+        final ShapeImageView streakCounter = (ShapeImageView) smsDetails.findViewById(R.id.streak);
 
         final TextView nameView = (TextView) smsDetails.findViewById(R.id.name_view);
         TextView sentView = (TextView) smsDetails.findViewById(R.id.sent_view);
         TextView receivedView = (TextView) smsDetails.findViewById(R.id.received_view);
 
-        Log.d("test", Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id"))) + "");
+        // Log.d("test", Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id"))) + "");
 
         String name = Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name");
 
-        Log.d("PICASSO", " ");
-        Log.d("PICASSO", "NAME: " + name + "\nNUMBER: " + contact.get("number") + "\nID: " + Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")));
+        // Log.d("PICASSO", " ");
+        // Log.d("PICASSO", "NAME: " + name + "\nNUMBER: " + contact.get("number") + "\nID: " + Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")));
 
         if (Contacts.hasContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")), activity)) {
             try {
-                Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO");
+                // Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO");
                 if (ScreenInfo.isPortrait(activity.getResources())) {
                     //Log.d("PICASSO", contacts.get(0).get("id"));
                     Picasso.with(activity)
@@ -88,7 +89,7 @@ public class SmsContactDetailsHelper {
                             .into(contactImage);
                 }
             } catch (Exception e) {
-                Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO: " + e.toString());
+                // Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO: " + e.toString());
             }
         } else {
             try {
@@ -97,7 +98,7 @@ public class SmsContactDetailsHelper {
 
                 if (Character.isLetter(name.charAt(0))) {
 
-                    Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO - LETTER");
+                    // Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO - LETTER");
 
                     int bitmapSize;
 
@@ -116,7 +117,7 @@ public class SmsContactDetailsHelper {
 
                 } else {
 
-                    Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO - NO LETTER");
+                    // Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO - NO LETTER");
 
                     if (ScreenInfo.isPortrait(activity.getResources())) {
                         //Log.d("PICASSO", contacts.get(0).get("id"));
@@ -135,13 +136,23 @@ public class SmsContactDetailsHelper {
                     }
                 }
             } catch (Exception e) {
-                Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO " + e.toString());
+                // Log.d("PICASSO", "CONTACT " + name + " DOES NOT HAVE PHOTO " + e.toString());
 
                 e.printStackTrace();
             }
         }
 
-        Log.d("PICASSO", " ");
+        // Log.d("PICASSO", " ");
+
+        int streak = Streaks.getStreak(activity, Streaks.getContactId(activity, contact.get("number")));
+        // Log.d("STREAK_COUNTER", Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name") + " - " + streak);
+
+        if(streak >= 2) {
+            streakCounter.setVisibility(View.VISIBLE);
+            streakCounter.setText("" + streak);
+        } else {
+            streakCounter.setVisibility(View.INVISIBLE);
+        }
 
         nameView.setText(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name"));
         sentView.setText(contact.get("sent"));
@@ -158,9 +169,9 @@ public class SmsContactDetailsHelper {
 
                 HashMap<String, String> contact = Contacts.searchContactsUsingName(name, activity);
 
-                Log.d("ON_CLICK_TEST", "ID: " + contact.get("id"));
-                Log.d("ON_CLICK_TEST", "Name: " + contact.get("name"));
-                Log.d("ON_CLICK_TEST", "Number: " + contact.get("number"));
+                // Log.d("ON_CLICK_TEST", "ID: " + contact.get("id"));
+                // Log.d("ON_CLICK_TEST", "Name: " + contact.get("name"));
+                // Log.d("ON_CLICK_TEST", "Number: " + contact.get("number"));
 
                 Intent intent = new Intent(activity, ContactSpecificsActivity.class);
 

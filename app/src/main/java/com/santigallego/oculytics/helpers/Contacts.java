@@ -42,7 +42,7 @@ public class Contacts {
             }
             return false;
         } catch (Exception e) {
-            Log.e("CONTACT", e.toString());
+            // Log.e("CONTACT", e.toString());
             return false;
         }
     }
