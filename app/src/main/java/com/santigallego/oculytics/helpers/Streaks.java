@@ -33,13 +33,17 @@ public class Streaks {
 
         //boolean checker = false;
         if (cr.moveToFirst()) {
+            db.close();
             return cr.getInt(cr.getColumnIndex("id"));
         } else {
+            db.close();
             return -1;
         }
+
+
     }
 
-    public static int getSteak(Context context, int id) {
+    public static int getStreak(Context context, int id) {
 
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
@@ -49,8 +53,10 @@ public class Streaks {
 
         //boolean checker = false;
         if (cr.moveToFirst()) {
+            db.close();
             return cr.getInt(cr.getColumnIndex("streak"));
         } else {
+            db.close();
             return 0;
         }
     }
@@ -65,7 +71,7 @@ public class Streaks {
         DateTime dayAgo = current.minusDays(1);
         //dtfOut.print(dayago);
 
-        Log.d("STREAKS_CLEAR", "ENTERED");
+        // Log.d("STREAKS_CLEAR", "ENTERED");
 
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
@@ -74,7 +80,7 @@ public class Streaks {
         Cursor cr = db.rawQuery(query, null);
 
         if(cr.moveToFirst()) {
-            Log.d("STREAKS_CLEAR", "SENT");
+            // Log.d("STREAKS_CLEAR", "SENT");
             sent = true;
         }
         cr.close();
@@ -84,7 +90,7 @@ public class Streaks {
         Cursor cs = db.rawQuery(query, null);
 
         if(cs.moveToFirst()) {
-            Log.d("STREAKS_CLEAR", "RECEIVED");
+            // Log.d("STREAKS_CLEAR", "RECEIVED");
             received = true;
         }
         cs.close();
@@ -94,20 +100,22 @@ public class Streaks {
 
             Cursor c = db.rawQuery(checker_query, null);
 
-            Log.d("STREAKS_CLEAR", "ENTERED NON COMMU");
+            // Log.d("STREAKS_CLEAR", "ENTERED NON COMMU");
 
             if (c.moveToFirst()) {
                 int streak = c.getInt(c.getColumnIndex("streak"));
 
-                Log.d("STREAKS_CLEAR", "F " + streak);
+                // Log.d("STREAKS_CLEAR", "F " + streak);
 
                 if (streak > 0) {
-                    Log.d("STREAKS_CLEAR", "G");
+                    // Log.d("STREAKS_CLEAR", "G");
                     String update_query = "UPDATE streaks SET streak = 0, streak_updated_on = current_timestamp;";
                     db.execSQL(update_query);
                 }
             }
             c.close();
+
+            db.close();
         }
     }
 
@@ -190,14 +198,14 @@ public class Streaks {
         DateTime current = new DateTime(DateTimeZone.UTC);
         DateTime dayAgo = current.minusDays(1);
 
-        Log.d("STREAKS_UP", "ENTERED");
+        // Log.d("STREAKS_UP", "ENTERED");
 
         String query = "SELECT * FROM contacts WHERE id = " + id + " AND sent_updated_on > \"" + dtfOut.print(dayAgo) + "\";";
 
         Cursor cr = db.rawQuery(query, null);
 
         if(cr.moveToFirst()) {
-            Log.d("STREAKS_UP", "SENT");
+            // Log.d("STREAKS_UP", "SENT");
 
             sent = true;
         }
@@ -208,7 +216,7 @@ public class Streaks {
         Cursor cs = db.rawQuery(query, null);
 
         if(cs.moveToFirst()) {
-            Log.d("STREAKS_UP", "RECEIVED");
+            // Log.d("STREAKS_UP", "RECEIVED");
             received = true;
         }
         cs.close();
@@ -217,14 +225,14 @@ public class Streaks {
 
             String checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + ";";
 
-            Log.d("STREAKS_UP", "F");
+            // Log.d("STREAKS_UP", "F");
             Cursor c = db.rawQuery(checker_query, null);
 
             if (c.moveToFirst()) {
 
                 int streak = c.getInt(c.getColumnIndex("streak"));
 
-                Log.d("STREAKS_UP", "G " + streak);
+                // Log.d("STREAKS_UP", "G " + streak);
 
                 if (streak == 0) {
                     String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp;";
@@ -233,14 +241,14 @@ public class Streaks {
 
                     checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + " AND streak_updated_on < \"" + dtfOut.print(dayAgo) + "\";";
 
-                    Log.d("STREAKS_UP", "F");
+                    // Log.d("STREAKS_UP", "F");
                     Cursor cp = db.rawQuery(checker_query, null);
 
                     if (cp.moveToFirst()) {
 
                         streak = cp.getInt(cp.getColumnIndex("streak"));
 
-                        Log.d("STREAKS_UP", "G " + streak);
+                        // Log.d("STREAKS_UP", "G " + streak);
 
                         String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp;";
                         db.execSQL(update_query);
@@ -320,5 +328,7 @@ public class Streaks {
                 }
             }
         }*/
+
+        db.close();
     }
 }
