@@ -1,24 +1,20 @@
 package com.santigallego.oculytics.helpers;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -27,11 +23,7 @@ import com.santigallego.oculytics.activities.ContactSpecificsActivity;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.HashMap;
 
 import cn.refactor.library.ShapeImageView;
@@ -44,7 +36,7 @@ public class SmsContactDetailsHelper {
     public SmsContactDetailsHelper() {}
 
     // Create templates for top three card
-    public static Bitmap createContactSmsDetails(HashMap<String, String> contact, LinearLayout parent, final Activity activity) {
+    public static Bitmap createContactSmsDetails(final Activity activity, HashMap<String, String> contact, LinearLayout parent, Boolean full) {
 
         Bitmap bitmap = null;
 
@@ -54,7 +46,13 @@ public class SmsContactDetailsHelper {
         final int width = size.x;
         final int height = size.y;
 
-        View smsDetails = activity.getLayoutInflater().inflate(R.layout.contact_sms_details, null);
+        View smsDetails;
+
+        if(full) {
+            smsDetails = activity.getLayoutInflater().inflate(R.layout.template_contact_sms_details_full, null);
+        } else {
+            smsDetails = activity.getLayoutInflater().inflate(R.layout.template_contact_sms_details, null);
+        }
 
         final ShapeImageView contactImage = (ShapeImageView) smsDetails.findViewById(R.id.contact_image);
         final ShapeImageView streakCounter = (ShapeImageView) smsDetails.findViewById(R.id.streak);
@@ -63,27 +61,50 @@ public class SmsContactDetailsHelper {
         TextView sentView = (TextView) smsDetails.findViewById(R.id.sent_view);
         TextView receivedView = (TextView) smsDetails.findViewById(R.id.received_view);
 
+        Uri contactImageUri = null; //Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")));
+        Boolean contactHasImage = Contacts.hasContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")), activity);
+
+        if(contactHasImage) {
+            contactImageUri = Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")));
+            /*try {
+                Bitmap image = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), contactImageUri);
+                if(image == null) {
+                    contactHasImage = false;
+                    image.recycle();
+                }
+            } catch (Exception e) {
+                Log.d("ERROR", e.toString());
+                e.printStackTrace();
+            }*/
+        }
+
         // Log.d("test", Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id"))) + "");
 
         String name = Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name");
 
+        if(full) {
+            TextView numberView = (TextView) smsDetails.findViewById(R.id.number_view);
+
+            numberView.setText(contact.get("number"));
+        }
+
         // Log.d("PICASSO", " ");
         // Log.d("PICASSO", "NAME: " + name + "\nNUMBER: " + contact.get("number") + "\nID: " + Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")));
 
-        if (Contacts.hasContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id")), activity)) {
+        if (contactHasImage) {
             try {
                 // Log.d("PICASSO", "CONTACT " + name + " HAS PHOTO");
                 if (ScreenInfo.isPortrait(activity.getResources())) {
                     //Log.d("PICASSO", contacts.get(0).get("id"));
                     Picasso.with(activity)
-                            .load(Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id"))))
+                            .load(contactImageUri)
                             .resize(width / 8, width / 8)
                             //.transform(new CircleTransform())
                             .into(contactImage);
 
                 } else if (ScreenInfo.isLandscape(activity.getResources())) {
                     Picasso.with(activity)
-                            .load(Contacts.getContactPhoto(Long.parseLong(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("id"))))
+                            .load(contactImageUri)
                             .resize(height / 8, height / 8)
                             //.transform(new CircleTransform())
                             .into(contactImage);
@@ -141,6 +162,37 @@ public class SmsContactDetailsHelper {
                 e.printStackTrace();
             }
         }
+
+
+        try {
+            bitmap = ((BitmapDrawable) contactImage.getDrawable()).getBitmap();
+        } catch (NullPointerException e) {
+            int bitmapSize;
+
+            if (ScreenInfo.isPortrait(activity.getResources())) {
+                bitmapSize = width / 8;
+            } else {
+                bitmapSize = height / 8;
+            }
+
+            bitmap = Bitmap.createBitmap(bitmapSize, bitmapSize, Bitmap.Config.ARGB_8888);
+            bitmap.eraseColor(activity.getResources().getColor(R.color.md_blue));
+
+            bitmap = drawTextToBitmap(activity, bitmap, name.substring(0, 1));
+
+            contactImage.setImageBitmap(bitmap);
+        }
+
+        /*try {
+            Bitmap image = MediaStore.Images.Media.getBitmap(activity.getContentResolver(), contactImageUri);
+            if(image == null) {
+                contactHasImage = false;
+                image.recycle();
+            }
+        } catch (Exception e) {
+            Log.d("ERROR", e.toString());
+            e.printStackTrace();
+        }*/
 
         // Log.d("PICASSO", " ");
 
@@ -215,6 +267,10 @@ public class SmsContactDetailsHelper {
         });
 
         return bitmap;
+    }
+
+    public static void setContactImage(Activity activity, Boolean contactHasImage, HashMap<String, String> contact, Uri contactImageuri) {
+
     }
 
     public static Bitmap drawTextToBitmap(Activity activity, Bitmap bitmap, String gText) {
