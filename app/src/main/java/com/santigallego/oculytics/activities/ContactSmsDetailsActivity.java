@@ -230,7 +230,7 @@ public class ContactSmsDetailsActivity extends AppCompatActivity {
                 contact.put("received", received);
                 contact.put("streak", "" + Streaks.getStreak(this, id));
 
-                SmsContactDetailsHelper.createContactSmsDetails(contact, allLayout, this);
+                SmsContactDetailsHelper.createContactSmsDetails(this, contact, allLayout, true);
 
 
             } while (cr.moveToNext());
