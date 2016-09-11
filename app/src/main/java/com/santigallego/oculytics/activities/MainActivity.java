@@ -2,6 +2,8 @@ package com.santigallego.oculytics.activities;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.SearchManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,9 +16,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -86,6 +90,8 @@ public class MainActivity extends AppCompatActivity {
         db.execSQL("DROP TABLE IF EXISTS sms_received");
         db.execSQL("DROP TABLE IF EXISTS mms_sent");
         db.execSQL("DROP TABLE IF EXISTS mms_received");*/
+
+        //
 
         db.close();
 
@@ -310,14 +316,27 @@ public class MainActivity extends AppCompatActivity {
 
         // This is called when doInBackground() is finished
         protected void onPostExecute(Long result) {
-            //showNotification("Downloaded " + result + " bytes");
+            setInformation();
         }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main_activity, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView =
+                (SearchView) MenuItemCompat.getActionView(searchItem);
+
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+
+        ComponentName componentName = new ComponentName(this, SearchableActivity.class);
+
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName));
+
         return true;
     }
 
@@ -326,25 +345,32 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.action_settings:
                 // User chose the "Settings" item, show the app settings UI...
-                Intent s_intent = new Intent(this, SettingsActivity.class);
-                startActivity(s_intent);
+                Intent settings = new Intent(this, SettingsActivity.class);
+                startActivity(settings);
                 return true;
 
             case R.id.action_upload:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
-                Intent intent = new Intent(this, FileInfoActivity.class);
-                intent.putExtra("download", false);
-                startActivity(intent);
+                Intent upload = new Intent(this, FileInfoActivity.class);
+                upload.putExtra("upload", false);
+                startActivity(upload);
                 return true;
 
             case R.id.action_download:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
-                Intent d_intent = new Intent(this, FileInfoActivity.class);
-                d_intent.putExtra("download", true);
-                startActivity(d_intent);
+                Intent download = new Intent(this, FileInfoActivity.class);
+                download.putExtra("download", true);
+                startActivity(download);
                 return true;
+
+            /*case R.id.action_search:
+                // User chose the "Favorite" action, mark the current item
+                // as a favorite...
+                Intent search = new Intent(this, SearchableActivity.class);
+                startActivity(search);
+                return true;*/
 
             default:
                 // If we got here, the user's action was not recognized.
@@ -685,7 +711,7 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("received", received);
                 contact.put("streak", "" + Streaks.getStreak(this, id));
 
-                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(contact, sentLayout, this);
+                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(this, contact, sentLayout, false);
                 if(bitmap != null) {
                     bitmaps.add(bitmap);
                 }
@@ -693,7 +719,6 @@ public class MainActivity extends AppCompatActivity {
                 String msg = "NUMBER: " + number + " \n" +
                              "SENT: " + sent + " \n" +
                              "RECEIVED: " + received;
-
                 // Log("COUNT_TOP_THREE", msg);
 
             } while (cr.moveToNext());
@@ -720,7 +745,7 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("received", received);
                 contact.put("streak", "" + Streaks.getStreak(this, id));
 
-                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(contact, receivedLayout, this);
+                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(this, contact, receivedLayout, false);
                 if(bitmap != null) {
                     bitmaps.add(bitmap);
                 }
@@ -728,7 +753,6 @@ public class MainActivity extends AppCompatActivity {
                 String msg = "NUMBER: " + number + " \n" +
                              "SENT: " + sent + " \n" +
                              "RECEIVED: " + received;
-
                 // Log("COUNT_TOP_THREE", msg);
 
             } while (c.moveToNext());
