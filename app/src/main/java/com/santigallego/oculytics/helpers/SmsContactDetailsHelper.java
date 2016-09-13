@@ -199,11 +199,11 @@ public class SmsContactDetailsHelper {
         int streak = Streaks.getStreak(activity, Streaks.getContactId(activity, contact.get("number")));
         // Log.d("STREAK_COUNTER", Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name") + " - " + streak);
 
-        if(streak >= 2) {
+        if(streak > 0) {
             streakCounter.setVisibility(View.VISIBLE);
             streakCounter.setText("" + streak);
         } else {
-            streakCounter.setVisibility(View.VISIBLE);
+            streakCounter.setVisibility(View.INVISIBLE);
         }
 
         nameView.setText(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name"));
