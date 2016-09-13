@@ -4,6 +4,7 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.SearchRecentSuggestions;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -15,6 +16,7 @@ import com.santigallego.oculytics.helpers.Contacts;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
 import com.santigallego.oculytics.helpers.Streaks;
+import com.santigallego.oculytics.providers.SuggestionProvider;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,43 +44,43 @@ public class SearchableActivity extends AppCompatActivity {
     private void handleIntent(Intent intent) {
         if(Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-
-            Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
-
-            LinearLayout parent = (LinearLayout) findViewById(R.id.searchable_parent);
-
-            // TO BE MOVED TO METHOD
-
-            ArrayList<HashMap<String, String>> contacts = Contacts.searchMultipleContactsUsingName(query, this);
-
             getSupportActionBar().setTitle(query);
 
-            /*getSupportActionBar().setTitle("Search: " + query);
-            getSupportActionBar().setSubtitle("Found " + contacts.size() + " records");*/
-            //getSupportActionBar.setTi("Found " + contacts.size() + " records for search: \"" + query + "\"");
+            // save in history
+            SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
+                    SuggestionProvider.AUTHORITY, SuggestionProvider.MODE);
+            suggestions.saveRecentQuery(query, null);
 
-            for(HashMap<String, String> contact : contacts) {
+            populateUI(query);
+        }
+    }
 
-                SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MODE_PRIVATE, null);
+    private void populateUI(String query) {
+        // setup views
+        LinearLayout parent = (LinearLayout) findViewById(R.id.searchable_parent);
 
-                String selectQuery = "SELECT * FROM contacts WHERE number = \"" + contact.get("number") + "\";";
+        ArrayList<HashMap<String, String>> contacts = Contacts.searchMultipleContactsUsingName(query, this);
 
-                Cursor cr = db.rawQuery(selectQuery, null);
+        for(HashMap<String, String> contact : contacts) {
 
-                if(cr.moveToFirst()) {
-                    int id = cr.getInt(cr.getColumnIndex("id"));
-                    //String number = cr.getString(cr.getColumnIndex("number"));
-                    String sent = cr.getInt(cr.getColumnIndex("sent")) + "";
-                    String received = cr.getInt(cr.getColumnIndex("received")) + "";
+            SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MODE_PRIVATE, null);
+            String selectQuery = "SELECT * FROM contacts WHERE number = \"" + contact.get("number") + "\";";
+            Cursor cr = db.rawQuery(selectQuery, null);
 
-                    //contact.put("number", number);
-                    contact.put("sent", sent);
-                    contact.put("received", received);
-                    contact.put("streak", "" + Streaks.getStreak(this, id));
-                }
-                cr.close();
+            if (cr.moveToFirst()) {
+                int id = cr.getInt(cr.getColumnIndex("id"));
+                //String number = cr.getString(cr.getColumnIndex("number"));
+                String sent = cr.getInt(cr.getColumnIndex("sent")) + "";
+                String received = cr.getInt(cr.getColumnIndex("received")) + "";
 
-                db.close();
+                //contact.put("number", number);
+                contact.put("sent", sent);
+                contact.put("received", received);
+                contact.put("streak", "" + Streaks.getStreak(this, id));
+            }
+            cr.close();
+
+            db.close();
 
                 /*Log.d("SEARCH", "  ");
                 Log.d("SEARCH", "ID: " + contact.get("id"));
@@ -86,8 +88,7 @@ public class SearchableActivity extends AppCompatActivity {
                 Log.d("SEARCH", "NUMBER: " + contact.get("number"));
                 Log.d("SEARCH", "  ");*/
 
-                SmsContactDetailsHelper.createContactSmsDetails(this, contact, parent, true);
-            }
+            SmsContactDetailsHelper.createContactSmsDetails(this, contact, parent, true);
         }
     }
 }
