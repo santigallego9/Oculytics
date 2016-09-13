@@ -33,15 +33,21 @@
 
     </android.support.v7.widget.Toolbar>
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <include layout="@layout/template_totals" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
-        <include layout="@layout/template_history_chart" />
+            <include layout="@layout/template_totals" />
 
-    </LinearLayout>
+            <include layout="@layout/template_history_chart" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </LinearLayout>
