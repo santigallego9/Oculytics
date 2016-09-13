@@ -88,6 +88,9 @@
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
         </activity>
+
+        <provider android:name=".providers.SuggestionProvider"
+            android:authorities="com.santigallego.oculytics.providers.SuggestionProvider" />
     </application>
 
 </manifest>
