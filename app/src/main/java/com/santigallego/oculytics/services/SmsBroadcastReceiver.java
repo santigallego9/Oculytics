@@ -26,14 +26,24 @@ public class SmsBroadcastReceiver extends BroadcastReceiver {
         }
         String msgText = "FROM: " + address + "\nMESSAGE: " + smsBody;
 
+        boolean contactExists = true;
+
+        // if contact exists check if streaks needs to be cleared
         int id = Streaks.getContactId(context, address);
         if(id != -1) {
+            contactExists = false;
             Streaks.checkForStreakClear(context, id);
         }
-        Database.messageReceived(context, address);
-        id = Streaks.getContactId(context, address);
-        Streaks.updateStreak(context, id);
 
-        // Log.d("TEXT_MESSAGE", msgText);
+        // log message into database
+        Database.messageReceived(context, address);
+
+        // get id if contact did not exist before
+        if(!contactExists) {
+            id = Streaks.getContactId(context, address);
+        }
+
+        // check if streak needs to be updated
+        Streaks.updateStreak(context, id);
     }
 }

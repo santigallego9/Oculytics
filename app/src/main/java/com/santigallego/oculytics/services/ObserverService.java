@@ -75,14 +75,26 @@ public class ObserverService extends Service {
                     id = cr.getInt(cr.getColumnIndex(cr.getColumnName(0)));
 
                     String address = cr.getString(cr.getColumnIndex("address"));
+                    boolean contactExists = true;
 
-                    int id = Streaks.getContactId(ObserverService.this, address);
-                    if(id != -1) {
-                        Streaks.checkForStreakClear(ObserverService.this, id);
+                    // if contact exists check if streaks needs to be cleared
+                    int db_id = Streaks.getContactId(ObserverService.this, address);
+                    if(db_id != -1) {
+                        contactExists = false;
+                        Streaks.checkForStreakClear(ObserverService.this, db_id);
                     }
+
+                    // log message into database
+
                     Database.messageSent(ObserverService.this, address);
-                    id = Streaks.getContactId(ObserverService.this, address);
-                    Streaks.updateStreak(ObserverService.this, id);
+
+                    // get id if contact did not exist before
+                    if(!contactExists) {
+                        db_id = Streaks.getContactId(ObserverService.this, address);
+                    }
+
+                    // check if streak needs to be updated
+                    Streaks.updateStreak(ObserverService.this, db_id);
 
                     // Log.d("OUTGOING", address);
                 } else {
@@ -113,53 +125,70 @@ public class ObserverService extends Service {
             Uri uriSMSURI = Uri.parse("content://mms");
             Cursor cr = ObserverService.this.getContentResolver().query(uriSMSURI, null, null, null, null);
             // this will make it point to the first record, which is the last SMS sent
-            cr.moveToNext();
+            if(cr.moveToNext()) {
 
-            try {
-                String isIncoming = getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this);
-                if(isIncoming.equals("insert-address-token")) {
-                    String address = getOutgoingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))));
-                    if(address.length() > 1) {
-                        if(id != Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))))) {
-                            id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            // Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            // Log.d("MMS", "OUTGOING: " + getOutgoingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0)))));
+                try {
+                    String isIncoming = getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this);
+                    if (isIncoming.equals("insert-address-token")) {
+                        String address = getOutgoingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))));
+                        if (address.length() > 1) {
+                            if (id != Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))))) {
+                                id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
 
-                            int id = Streaks.getContactId(ObserverService.this, address);
-                            if(id != -1) {
-                                Streaks.checkForStreakClear(ObserverService.this, id);
+                                boolean contactExists = true;
+
+                                // if contact exists check if streaks needs to be cleared
+                                int db_id = Streaks.getContactId(ObserverService.this, address);
+                                if (db_id != -1) {
+                                    contactExists = false;
+                                    Streaks.checkForStreakClear(ObserverService.this, db_id);
+                                }
+
+                                // log message into database
+                                Database.mmsSent(ObserverService.this, address);
+
+                                // get id if contact did not exist before
+                                if (!contactExists) {
+                                    db_id = Streaks.getContactId(ObserverService.this, address);
+                                }
+
+                                // check if streak needs to be updated
+                                Streaks.updateStreak(ObserverService.this, db_id);
+
                             }
-                            Database.mmsSent(ObserverService.this, address);
-                            id = Streaks.getContactId(ObserverService.this, address);
-                            Streaks.updateStreak(ObserverService.this, id);
+                        }
+                    } else {
+                        String address = getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this);
+                        if (address.length() > 1) {
+                            if (id != Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))))) {
+                                id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
 
-                        } else {
-                            // Log.d("MMS", "ALREADY LOGGED");
+                                boolean contactExists = true;
+
+                                // if contact exists check if streaks needs to be cleared
+                                int db_id = Streaks.getContactId(ObserverService.this, address);
+                                if (db_id != -1) {
+                                    contactExists = false;
+                                    Streaks.checkForStreakClear(ObserverService.this, db_id);
+                                }
+
+                                // log message into database
+                                Database.mmsReceived(ObserverService.this, address);
+
+                                // get id if contact did not exist before
+                                if (!contactExists) {
+                                    db_id = Streaks.getContactId(ObserverService.this, address);
+                                }
+
+                                // check if streak needs to be updated
+                                Streaks.updateStreak(ObserverService.this, db_id);
+
+                            }
                         }
                     }
-                } else {
-                    String address = getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this);
-                    if(address.length() > 1) {
-                        if(id != Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))))) {
-                            id = Integer.parseInt(cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            // Log.d("MMS", cr.getColumnName(0) + ": " + cr.getString(cr.getColumnIndex(cr.getColumnName(0))));
-                            // Log.d("MMS", "INCOMING: " + getIncomingMmsAddress(cr.getInt(cr.getColumnIndex(cr.getColumnName(0))), ObserverService.this));
-
-                            int id = Streaks.getContactId(ObserverService.this, address);
-                            if(id != -1) {
-                                Streaks.checkForStreakClear(ObserverService.this, id);
-                            }
-                            Database.mmsReceived(ObserverService.this, address);
-                            id = Streaks.getContactId(ObserverService.this, address);
-                            Streaks.updateStreak(ObserverService.this, id);
-
-                        } else {
-                            // Log.d("MMS", "ALREADY LOGGED");
-                        }
-                    }
+                } catch (Exception e) {
+                    // Log.d("MMS", "BROKE DOWN");
                 }
-            } catch (Exception e) {
-                // Log.d("MMS", "BROKE DOWN");
             }
 
             cr.close();
@@ -167,7 +196,7 @@ public class ObserverService extends Service {
     }
 
     private String getOutgoingMmsAddress(int id) {
-        String selectionAdd = new String("msg_id=" + id);
+        String selectionAdd = "msg_id=" + id;
         String uriStr = "content://mms/" + id + "/addr";
         Uri uriAddress = Uri.parse(uriStr);
         Cursor cAdd = getContentResolver().query(uriAddress, null,
