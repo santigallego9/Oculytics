@@ -285,7 +285,7 @@ public class Database {
     /* -------------------------------------------------------------------------------- */
     /* -------------------------------------------------------------------------------- */
     /* ---------                                                             ---------- */
-    /* --------- THESE FUNCTIONS ARE REPEATED AND REQUIRE A DATE TO BE GIVEN ---------- */
+    /* ---------    THESE FUNCTIONS ARE FOR GETTING MESSAGES FROM HISTORY    ---------- */
     /* ---------                                                             ---------- */
     /* -------------------------------------------------------------------------------- */
     /* -------------------------------------------------------------------------------- */
@@ -396,6 +396,7 @@ public class Database {
                     do {
                         int id = c.getInt(c.getColumnIndex("id"));
                         insertQuery = "INSERT INTO sms_sent (contact_id, sent_on) VALUES (" + id + ", " + f_date + ");";
+
                         // Log.d("TEXT_MESSAGE", insertQuery);
                         db.execSQL(insertQuery);
                         insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
@@ -411,8 +412,9 @@ public class Database {
 
         db.close();
     }
+    /*
 
-    public static void mmsReceived(Context context, String number, String date) {
+    public static void mmsReceived(Context context, String number, Boolean original) {
 
         String f_date = "\"" + date + "\"";
 
@@ -521,7 +523,7 @@ public class Database {
         }
 
         db.close();
-    }
+    }*/
 
 
 }
