@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
         //
 
-        db.close();
 
         startupFunctions();
 
@@ -101,7 +100,90 @@ public class MainActivity extends AppCompatActivity {
         //thread.run();
 
         //
-        // new SetupMessagesTask().execute("");
+        //new SetupMessagesTask().execute("");
+
+        DateTime current = new DateTime(DateTimeZone.UTC);
+        DateTime dayAgo = current.minusDays(1);
+
+        String query = "SELECT * FROM contacts;";
+        Cursor all = db.rawQuery(query, null);
+
+        if(all.moveToFirst()) {
+
+            do {
+
+                boolean sent = false, received = false;
+
+                int id = all.getInt(all.getColumnIndex("id"));
+                String number = all.getString(all.getColumnIndex("number"));
+
+                String sent_updated_on = "", received_updated_on = "", streak_updated_on = "";
+
+                // Check to see if message has been sent in last 24 hours
+                //SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+                query = "SELECT * FROM contacts WHERE id = " + id + " AND sent_updated_on > \"" + dtfOut.print(dayAgo) + "\";";
+                Cursor cr = db.rawQuery(query, null);
+
+                if (cr.moveToFirst()) {
+                    sent_updated_on = cr.getString(cr.getColumnIndex("sent_updated_on"));
+                    sent = true;
+                }
+                cr.close();
+
+
+                // Check to see if message has been received in last 24 hours
+                query = "SELECT * FROM contacts WHERE id = " + id + " AND received_updated_on > \"" + dtfOut.print(dayAgo) + "\";";
+                Cursor cs = db.rawQuery(query, null);
+
+                if (cs.moveToFirst()) {
+                    received_updated_on = cs.getString(cs.getColumnIndex("received_updated_on"));
+                    received = true;
+                }
+                cs.close();
+
+
+                // If a message has been sent and received in last 24 enter
+                if (received && sent) {
+
+                    String checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + ";";
+                    Cursor c = db.rawQuery(checker_query, null);
+
+                    if (c.moveToFirst()) {
+
+                        // check to see if streaks has been updated in the last 24 hours
+                        checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + " AND streak_updated_on < \"" + dtfOut.print(dayAgo) + "\";";
+                        Cursor cp = db.rawQuery(checker_query, null);
+
+                        // if any records, has not been updated, increase by 1, update timestamp
+                        if (cp.moveToFirst()) {
+                            streak_updated_on = cp.getString(cp.getColumnIndex("streak_updated_on"));
+                            //String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp;";
+                            //db.execSQL(update_query);
+                        }
+                        cp.close();
+                    }
+                }
+
+                Log.d("STREAK", " ");
+                Log.d("STREAK", " ");
+                Log.d("STREAK", " ");
+                Log.d("STREAK", "    Name: " + Contacts.searchContactsUsingNumber(number, this).get("name"));
+                Log.d("STREAK", " Current: " + dtfOut.print(current));
+                Log.d("STREAK", "  24 ago: " + dtfOut.print(dayAgo));
+                Log.d("STREAK", "    Sent: " + sent_updated_on);
+                Log.d("STREAK", "Received: " + received_updated_on);
+                Log.d("STREAK", "  Streak: " + streak_updated_on);
+                Log.d("STREAK", "----------------------");
+                Log.d("STREAK", "    Sent: " + sent);
+                Log.d("STREAK", "Received: " + received);
+                Log.d("STREAK", " ");
+                Log.d("STREAK", " ");
+                Log.d("STREAK", " ");
+            } while(all.moveToNext());
+        }
+
+        db.close();
+
     }
 
     private class SetupMessagesTask extends AsyncTask<String, Integer, Long> {
@@ -618,6 +700,14 @@ public class MainActivity extends AppCompatActivity {
         setTopThree();
     }
 
+    private void setInformation(SwipeRefreshLayout swipeRefreshLayout) {
+        checkStreaks();
+        setTotals();
+        setTopThree();
+
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
     private void setTotals() {
         //Layout layout = (Layout) findViewById(R.id.)
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
@@ -762,15 +852,6 @@ public class MainActivity extends AppCompatActivity {
         db.close();
     }
 
-    // Clear any bitmaps set for totals
-    private void clearBitmaps() {
-        for(Bitmap bitmap : bitmaps) {
-            bitmap.recycle();
-        }
-
-        bitmaps.clear();
-    }
-
     // Set animation for charts
     private void smsHistoryChartAnimation(int id) {
 
@@ -891,13 +972,15 @@ public class MainActivity extends AppCompatActivity {
                 new SwipeRefreshLayout.OnRefreshListener() {
                     @Override
                     public void onRefresh() {
+
                         // Log.i("REFRESH", "onRefresh called from SwipeRefreshLayout");
 
                         // This method performs the actual data-refresh operation.
                         // The method calls setRefreshing(false) when it's finished.
-                        clearBitmaps();
-                        setInformation();
-                        swipeRefreshLayout.setRefreshing(false);
+                        // clearBitmaps();
+
+                        swipeRefreshLayout.setRefreshing(true);
+                        setInformation(swipeRefreshLayout);
                     }
                 }
         );
