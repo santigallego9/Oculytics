@@ -26,39 +26,39 @@ public class Streaks {
         number = PhoneNumbers.formatNumber(number, false);
 
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
         String selectQuery = "SELECT * FROM contacts WHERE number = \"" + number + "\" LIMIT 1;";
-
         Cursor cr = db.rawQuery(selectQuery, null);
+
+        int id = -1;
 
         //boolean checker = false;
         if (cr.moveToFirst()) {
-            db.close();
-            return cr.getInt(cr.getColumnIndex("id"));
-        } else {
-            db.close();
-            return -1;
+            id = cr.getInt(cr.getColumnIndex("id"));
         }
 
+        cr.close();
+        db.close();
 
+        return id;
     }
 
     public static int getStreak(Context context, int id) {
 
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
         String selectQuery = "SELECT streak FROM streaks WHERE contact_id = " + id + " LIMIT 1;";
-
         Cursor cr = db.rawQuery(selectQuery, null);
+
+        int streak = 0;
 
         //boolean checker = false;
         if (cr.moveToFirst()) {
-            db.close();
-            return cr.getInt(cr.getColumnIndex("streak"));
-        } else {
-            db.close();
-            return 0;
+            streak = cr.getInt(cr.getColumnIndex("streak"));
         }
+
+        cr.close();
+        db.close();
+
+        return streak;
     }
 
     // only clear if streak is NOT 0
@@ -66,8 +66,7 @@ public class Streaks {
 
         boolean sent = false, received = false;
 
-        DateTime current = new DateTime(DateTimeZone.UTC);
-        DateTime dayAgo = current.minusMinutes(1);;
+        DateTime dayAgo = new DateTime(DateTimeZone.UTC).minusDays(1);
 
         // Check to see if message has been sent in last 24 hours
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
@@ -103,7 +102,7 @@ public class Streaks {
 
                 // if streak is greater than 0, clear it to zero
                 if (streak > 0) {
-                    String update_query = "UPDATE streaks SET streak = 0, streak_updated_on = current_timestamp;";
+                    String update_query = "UPDATE streaks SET streak = 0, streak_updated_on = current_timestamp WHERE contact_id = " + id + ";";
                     db.execSQL(update_query);
                 }
             }
@@ -117,12 +116,12 @@ public class Streaks {
 
         boolean sent = false, received = false;
 
-        DateTime current = new DateTime(DateTimeZone.UTC);
-        DateTime dayAgo = current.minusMinutes(1);
-
+        DateTime dayAgo = new DateTime(DateTimeZone.UTC).minusDays(1);
 
         // Check to see if message has been sent in last 24 hours
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+        //db.beginTransaction();
         String query = "SELECT * FROM contacts WHERE id = " + id + " AND sent_updated_on > \"" + dtfOut.print(dayAgo) + "\";";
         Cursor cr = db.rawQuery(query, null);
 
@@ -150,19 +149,29 @@ public class Streaks {
 
             if (c.moveToFirst()) {
 
-                // check to see if streaks has been updated in the last 24 hours
-                checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + " AND streak_updated_on < \"" + dtfOut.print(dayAgo) + "\";";
-                Cursor cp = db.rawQuery(checker_query, null);
+                int streak = c.getInt(c.getColumnIndex("streak"));
 
-                // if any records, has not been updated, increase by 1, update timestamp
-                if (cp.moveToFirst()) {
+                if (streak == 0) {
                     String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp;";
                     db.execSQL(update_query);
+                } else {
+
+                    // check to see if streaks has been updated in the last 24 hours
+                    checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + " AND streak_updated_on < \"" + dtfOut.print(dayAgo) + "\";";
+                    Cursor cp = db.rawQuery(checker_query, null);
+
+                    // if any records, has not been updated, increase by 1, update timestamp
+                    if (cp.moveToFirst()) {
+                        String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp WHERE contact_id = " + id + ";";
+                        db.execSQL(update_query);
+                    }
+                    cp.close();
                 }
-                cp.close();
             }
+            c.close();
         }
 
+        //db.endTransaction();
         db.close();
 
 
