@@ -25,7 +25,7 @@ CREATE TABLE contacts (
 CREATE TABLE streaks (
   id INTEGER PRIMARY KEY,
   contact_id INTEGER,
-  streak INTEGER default 1,
+  streak INTEGER default 0,
   streak_updated_on DATETIME default current_timestamp
 );
 CREATE TABLE sms_sent (
