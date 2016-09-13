@@ -80,109 +80,35 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
+        try {
+
+            SearchView searchView = (SearchView) findViewById(R.id.action_search);
+
+            int id = searchView.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
+            TextView textView = (TextView) searchView.findViewById(id);
+            textView.setTextColor(Color.BLACK);
+        }catch (Exception e) {
+            Log.d("SEARCH", e.toString());
+            e.printStackTrace();
+        }
+
         SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
-        /*db.execSQL("DROP TABLE IF EXISTS totals");
+        db.beginTransaction();
+        db.execSQL("DROP TABLE IF EXISTS totals");
         db.execSQL("DROP TABLE IF EXISTS mms_totals");
         db.execSQL("DROP TABLE IF EXISTS contacts");
         db.execSQL("DROP TABLE IF EXISTS streaks");
         db.execSQL("DROP TABLE IF EXISTS sms_sent");
         db.execSQL("DROP TABLE IF EXISTS sms_received");
         db.execSQL("DROP TABLE IF EXISTS mms_sent");
-        db.execSQL("DROP TABLE IF EXISTS mms_received");*/
-
-        //
-
+        db.execSQL("DROP TABLE IF EXISTS mms_received");
+        db.endTransaction();
 
         startupFunctions();
 
-        //SetupExistingMessagesThread thread = new SetupExistingMessagesThread();
-        //thread.run();
+        new SetupMessagesTask().execute("");
 
-        //
-        //new SetupMessagesTask().execute("");
-
-        DateTime current = new DateTime(DateTimeZone.UTC);
-        DateTime dayAgo = current.minusDays(1);
-
-        String query = "SELECT * FROM contacts;";
-        Cursor all = db.rawQuery(query, null);
-
-        if(all.moveToFirst()) {
-
-            do {
-
-                boolean sent = false, received = false;
-
-                int id = all.getInt(all.getColumnIndex("id"));
-                String number = all.getString(all.getColumnIndex("number"));
-
-                String sent_updated_on = "", received_updated_on = "", streak_updated_on = "";
-
-                // Check to see if message has been sent in last 24 hours
-                //SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-                query = "SELECT * FROM contacts WHERE id = " + id + " AND sent_updated_on > \"" + dtfOut.print(dayAgo) + "\";";
-                Cursor cr = db.rawQuery(query, null);
-
-                if (cr.moveToFirst()) {
-                    sent_updated_on = cr.getString(cr.getColumnIndex("sent_updated_on"));
-                    sent = true;
-                }
-                cr.close();
-
-
-                // Check to see if message has been received in last 24 hours
-                query = "SELECT * FROM contacts WHERE id = " + id + " AND received_updated_on > \"" + dtfOut.print(dayAgo) + "\";";
-                Cursor cs = db.rawQuery(query, null);
-
-                if (cs.moveToFirst()) {
-                    received_updated_on = cs.getString(cs.getColumnIndex("received_updated_on"));
-                    received = true;
-                }
-                cs.close();
-
-
-                // If a message has been sent and received in last 24 enter
-                if (received && sent) {
-
-                    String checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + ";";
-                    Cursor c = db.rawQuery(checker_query, null);
-
-                    if (c.moveToFirst()) {
-
-                        // check to see if streaks has been updated in the last 24 hours
-                        checker_query = "SELECT * FROM streaks WHERE contact_id = " + id + " AND streak_updated_on < \"" + dtfOut.print(dayAgo) + "\";";
-                        Cursor cp = db.rawQuery(checker_query, null);
-
-                        // if any records, has not been updated, increase by 1, update timestamp
-                        if (cp.moveToFirst()) {
-                            streak_updated_on = cp.getString(cp.getColumnIndex("streak_updated_on"));
-                            //String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp;";
-                            //db.execSQL(update_query);
-                        }
-                        cp.close();
-                    }
-                }
-
-                Log.d("STREAK", " ");
-                Log.d("STREAK", " ");
-                Log.d("STREAK", " ");
-                Log.d("STREAK", "    Name: " + Contacts.searchContactsUsingNumber(number, this).get("name"));
-                Log.d("STREAK", " Current: " + dtfOut.print(current));
-                Log.d("STREAK", "  24 ago: " + dtfOut.print(dayAgo));
-                Log.d("STREAK", "    Sent: " + sent_updated_on);
-                Log.d("STREAK", "Received: " + received_updated_on);
-                Log.d("STREAK", "  Streak: " + streak_updated_on);
-                Log.d("STREAK", "----------------------");
-                Log.d("STREAK", "    Sent: " + sent);
-                Log.d("STREAK", "Received: " + received);
-                Log.d("STREAK", " ");
-                Log.d("STREAK", " ");
-                Log.d("STREAK", " ");
-            } while(all.moveToNext());
-        }
-
-        db.close();
 
     }
 
@@ -203,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
 
             // this is a change
 
-            int s_id = 0, sent = 0, received = 0;
+            int s_id = -1, sent = 0, received = 0;
 
             Uri uriSMSURI = Uri.parse("content://sms");
             Cursor cr = getContentResolver().query(uriSMSURI, null, null, null, null);
@@ -211,12 +137,58 @@ public class MainActivity extends AppCompatActivity {
             uriSMSURI = Uri.parse("content://mms");
             Cursor cmms = MainActivity.this.getContentResolver().query(uriSMSURI, null, null, null, null);
 
+            int crc = 0, cmmsc = 0;
+            long totalSize = 0;
 
-            total = cr.getCount() + cmms.getCount();
+            try { crc = cr.getCount(); } catch (Exception e) { e.printStackTrace(); }
+            try { cmmsc = cmms.getCount(); } catch (Exception e) { e.printStackTrace(); }
+
+            total = crc + cmmsc;
             double counter = 0;
 
+
+            if(cmms.moveToLast()) {
+                do {
+                    counter++;
+                    try {
+                        String isIncoming = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
+                        if (isIncoming.equals("insert-address-token")) {
+                            String address = getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))));
+                            if (address.length() > 1) {
+                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
+                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", "OUTGOING: " + getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0)))));
+
+                                    Database.mmsSent(MainActivity.this, address);
+
+
+                                }
+                            }
+                        } else {
+                            String address = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
+                            if (address.length() > 1) {
+                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
+                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", "INCOMING: " + getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this));
+
+                                    Database.mmsReceived(MainActivity.this, address);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Log("MMS", "BROKE DOWN");
+                    }
+                    publishProgress((int)counter);
+                } while (cmms.moveToPrevious());
+            }
+
+            cmms.close();
+
+            s_id = -1;
+
             // this will make it point to the first record, which is the last SMS sent
-            long totalSize = 0;
             if(cr.moveToLast()) {
                 do {
                     counter++;
@@ -236,32 +208,62 @@ public class MainActivity extends AppCompatActivity {
                         String finalDateString = formatter.format(calendar.getTime());
 
                         if(type == 1) {
-                            smsType = "RECEIVED";
+                            //smsType = "RECEIVED";
                             received++;
                             try {
+
+                                boolean contactExists = true;
+
+                                // if contact exists check if streaks needs to be cleared
+                                int id = Streaks.getContactId(MainActivity.this, address);
+                                if(id != -1) {
+                                    contactExists = false;
+                                    Streaks.checkForStreakClear(MainActivity.this, id);
+                                }
+
+                                // log message into database
                                 Database.messageReceived(MainActivity.this, address, finalDateString);
+
+                                // get id if contact did not exist before
+                                if(!contactExists) {
+                                    id = Streaks.getContactId(MainActivity.this, address);
+                                }
+
+                                // check if streak needs to be updated
+                                Streaks.updateStreak(MainActivity.this, id);
+
                             } catch (Exception e) {
                                 // Log("MESSAGE_ERROR", "Ignoring this message");
                             }
                         } else if(type == 2) {
-                            smsType = "SENT";
+                            //smsType = "SENT";
                             sent++;
                             try {
+
+                                boolean contactExists = true;
+
+                                // if contact exists check if streaks needs to be cleared
+                                int id = Streaks.getContactId(MainActivity.this, address);
+                                if(id != -1) {
+                                    contactExists = false;
+                                    Streaks.checkForStreakClear(MainActivity.this, id);
+                                }
+
+                                // log message into database
                                 Database.messageSent(MainActivity.this, address, finalDateString);
+
+                                // get id if contact did not exist before
+                                if(!contactExists) {
+                                    id = Streaks.getContactId(MainActivity.this, address);
+                                }
+
+                                // check if streak needs to be updated
+                                Streaks.updateStreak(MainActivity.this, id);
+
                             } catch (Exception e) {
                                 // Log("MESSAGE_ERROR", "Ignoring this message");
                             }
                         }
-
-
-
-
-
-                        // Log("TESTING", " ");
-                        // Log("TESTING", "Name: " + Contacts.searchContactsUsingNumber(PhoneNumbers.formatNumber(address, false), MainActivity.this).get("name"));
-                        // Log("TESTING", "Date: " + finalDateString);
-                        // Log("TESTING", "Type: " + smsType);
-                        // Log("TESTING", " ");
 
                     } else {
                         // Log("TESTING", "MESSAGE ALREADY LOGGED");
@@ -270,65 +272,8 @@ public class MainActivity extends AppCompatActivity {
                 } while(cr.moveToPrevious());
             }
 
-            // Log("TESTING", " ");
-            // Log("TESTING", "TOTALS");
-            // Log("TESTING", "-------------------------");
-            // Log("TESTING", "Sent: " + sent);
-            // Log("TESTING", "Received: " + received);
-            // Log("TESTING", "-------------------------");
-            // Log("TESTING", " ");
 
             cr.close();
-
-            s_id = 0;
-
-            // this will make it point to the first record, which is the last SMS sent
-
-
-            if(cmms.moveToLast()) {
-                do {
-                    counter++;
-                    try {
-                        String isIncoming = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
-                        if (isIncoming.equals("insert-address-token")) {
-                            String address = getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))));
-                            if (address.length() > 1) {
-                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
-                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", "OUTGOING: " + getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0)))));
-
-
-                                    Database.mmsSent(MainActivity.this, address);
-
-
-                                } else {
-                                    // Log("MMS", "ALREADY LOGGED");
-                                }
-                            }
-                        } else {
-                            String address = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
-                            if (address.length() > 1) {
-                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
-                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", "INCOMING: " + getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this));
-
-                                    Database.mmsReceived(MainActivity.this, address);
-                                } else {
-                                    // Log("MMS", "ALREADY LOGGED");
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Log("MMS", "BROKE DOWN");
-                    }
-                    publishProgress((int)counter);
-                } while (cmms.moveToPrevious());
-            }
-
-            cmms.close();
-
 
 
             return totalSize;
