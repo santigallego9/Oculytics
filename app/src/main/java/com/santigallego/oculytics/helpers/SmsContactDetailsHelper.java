@@ -203,7 +203,7 @@ public class SmsContactDetailsHelper {
             streakCounter.setVisibility(View.VISIBLE);
             streakCounter.setText("" + streak);
         } else {
-            streakCounter.setVisibility(View.INVISIBLE);
+            streakCounter.setVisibility(View.VISIBLE);
         }
 
         nameView.setText(Contacts.searchContactsUsingNumber(contact.get("number"), activity).get("name"));
