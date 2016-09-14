@@ -30,4 +30,13 @@
         android:positiveButtonText="@null"
         android:title="@string/pref_title_add_friends_to_messages" />
 
+
+    <com.santigallego.oculytics.Objects.IntEditTextPreference
+        android:defaultValue="31"
+        android:key="chartHistory"
+        android:title="Chart History"
+        android:summary="Days of history to display on history charts throughout the app"
+        android:numeric="integer"
+        android:maxLength="2" />
+
 </PreferenceScreen>

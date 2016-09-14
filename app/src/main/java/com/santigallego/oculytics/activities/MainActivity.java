@@ -6,6 +6,7 @@ import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,6 +15,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -82,6 +84,14 @@ public class MainActivity extends AppCompatActivity {
 
         try {
 
+
+        } catch (Exception e) {
+            Log.d("SP", e.toString());
+            e.printStackTrace();
+        }
+
+        try {
+
             SearchView searchView = (SearchView) findViewById(R.id.action_search);
 
             int id = searchView.getContext().getResources().getIdentifier("android:id/search_src_text", null, null);
@@ -92,22 +102,20 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+        // SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
 
-        db.beginTransaction();
-        db.execSQL("DROP TABLE IF EXISTS totals");
+        /*db.execSQL("DROP TABLE IF EXISTS totals");
         db.execSQL("DROP TABLE IF EXISTS mms_totals");
         db.execSQL("DROP TABLE IF EXISTS contacts");
         db.execSQL("DROP TABLE IF EXISTS streaks");
         db.execSQL("DROP TABLE IF EXISTS sms_sent");
         db.execSQL("DROP TABLE IF EXISTS sms_received");
         db.execSQL("DROP TABLE IF EXISTS mms_sent");
-        db.execSQL("DROP TABLE IF EXISTS mms_received");
-        db.endTransaction();
+        db.execSQL("DROP TABLE IF EXISTS mms_received");*/
 
         startupFunctions();
 
-        new SetupMessagesTask().execute("");
+        //new SetupMessagesTask().execute("");
 
 
     }
@@ -146,47 +154,6 @@ public class MainActivity extends AppCompatActivity {
             total = crc + cmmsc;
             double counter = 0;
 
-
-            if(cmms.moveToLast()) {
-                do {
-                    counter++;
-                    try {
-                        String isIncoming = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
-                        if (isIncoming.equals("insert-address-token")) {
-                            String address = getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))));
-                            if (address.length() > 1) {
-                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
-                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", "OUTGOING: " + getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0)))));
-
-                                    Database.mmsSent(MainActivity.this, address);
-
-
-                                }
-                            }
-                        } else {
-                            String address = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
-                            if (address.length() > 1) {
-                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
-                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", "INCOMING: " + getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this));
-
-                                    Database.mmsReceived(MainActivity.this, address);
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Log("MMS", "BROKE DOWN");
-                    }
-                    publishProgress((int)counter);
-                } while (cmms.moveToPrevious());
-            }
-
-            cmms.close();
-
-            s_id = -1;
 
             // this will make it point to the first record, which is the last SMS sent
             if(cr.moveToLast()) {
@@ -274,6 +241,49 @@ public class MainActivity extends AppCompatActivity {
 
 
             cr.close();
+
+
+
+            s_id = -1;
+
+            if(cmms.moveToLast()) {
+                do {
+                    counter++;
+                    try {
+                        String isIncoming = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
+                        if (isIncoming.equals("insert-address-token")) {
+                            String address = getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))));
+                            if (address.length() > 1) {
+                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
+                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", "OUTGOING: " + getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0)))));
+
+                                    Database.mmsSent(MainActivity.this, address);
+
+
+                                }
+                            }
+                        } else {
+                            String address = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
+                            if (address.length() > 1) {
+                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
+                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
+                                    // Log("MMS", "INCOMING: " + getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this));
+
+                                    Database.mmsReceived(MainActivity.this, address);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        // Log("MMS", "BROKE DOWN");
+                    }
+                    publishProgress((int)counter);
+                } while (cmms.moveToPrevious());
+            }
+
+            cmms.close();
 
 
             return totalSize;
@@ -823,7 +833,11 @@ public class MainActivity extends AppCompatActivity {
         date = Dates.fromUtcToLocal(date);
         date = Dates.formatToMidnight(date);
 
-        int days = 31;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int days = prefs.getInt("chartHistory", 31);
+        //Log.d("SP", ""  + history);
+
+        //int days = 31;
         int step = days / 5;
         int highestValue = 0;
         for(int i = days; i >= 0; i--) {

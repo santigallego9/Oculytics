@@ -1,6 +1,7 @@
 package com.santigallego.oculytics.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -9,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -150,7 +152,9 @@ public class ContactSpecificsActivity extends AppCompatActivity {
         date = Dates.fromUtcToLocal(date);
         date = Dates.formatToMidnight(date);
 
-        int days = 31;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int days = prefs.getInt("chartHistory", 31);
+
         int step = days / 5;
         int highestValue = 0;
         for(int i = days; i >= 0; i--) {

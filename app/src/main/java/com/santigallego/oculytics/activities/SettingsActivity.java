@@ -147,7 +147,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 NavUtils.navigateUpFromSameTask(this);
             }
             return true;
-        }
+        } //
         return super.onMenuItemSelected(featureId, item);
     }
 
