@@ -3,6 +3,7 @@ package com.santigallego.oculytics.helpers;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.santigallego.oculytics.activities.MainActivity;
@@ -117,6 +118,7 @@ public class Streaks {
         boolean sent = false, received = false;
 
         DateTime dayAgo = new DateTime(DateTimeZone.UTC).minusDays(1);
+        DateTime sentOn = null, receivedOn = null;
 
         // Check to see if message has been sent in last 24 hours
         SQLiteDatabase db = context.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
@@ -126,6 +128,18 @@ public class Streaks {
         Cursor cr = db.rawQuery(query, null);
 
         if(cr.moveToFirst()) {
+            /*Log.d("STREAKS", " 0:" + cr.getColumnName(0));
+            Log.d("STREAKS", " 1:" + cr.getColumnName(1));
+            Log.d("STREAKS", " 2:" + cr.getColumnName(2));
+            Log.d("STREAKS", " 3:" + cr.getColumnName(3));
+            Log.d("STREAKS", " 4:" + cr.getColumnName(4));
+            Log.d("STREAKS", " 5:" + cr.getColumnName(5));
+            Log.d("STREAKS", " 6:" + cr.getColumnName(6));
+            Log.d("STREAKS", " 7:" + cr.getColumnName(7));
+            Log.d("STREAKS", " 8:" + cr.getColumnName(8));
+            Log.d("STREAKS", " 9:" + cr.getColumnName(9));*/
+
+            sentOn = dtfOut.parseDateTime(cr.getString(cr.getColumnIndex("sent_updated_on")));
             sent = true;
         }
         cr.close();
@@ -136,6 +150,7 @@ public class Streaks {
         Cursor cs = db.rawQuery(query, null);
 
         if(cs.moveToFirst()) {
+            receivedOn = dtfOut.parseDateTime(cs.getString(cs.getColumnIndex("received_updated_on")));
             received = true;
         }
         cs.close();
@@ -152,7 +167,16 @@ public class Streaks {
                 int streak = c.getInt(c.getColumnIndex("streak"));
 
                 if (streak == 0) {
-                    String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp;";
+
+                    String updateOn;
+
+                    if(sentOn.isBefore(receivedOn)) {
+                        updateOn = dtfOut.print(receivedOn);
+                    } else {
+                        updateOn = dtfOut.print(sentOn);
+                    }
+
+                    String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = \"" + updateOn + "\" WHERE contact_id = " + id + ";";
                     db.execSQL(update_query);
                 } else {
 
@@ -162,7 +186,16 @@ public class Streaks {
 
                     // if any records, has not been updated, increase by 1, update timestamp
                     if (cp.moveToFirst()) {
-                        String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = current_timestamp WHERE contact_id = " + id + ";";
+
+                        String updateOn;
+
+                        if(sentOn.isBefore(receivedOn)) {
+                            updateOn = dtfOut.print(receivedOn);
+                        } else {
+                            updateOn = dtfOut.print(sentOn);
+                        }
+
+                        String update_query = "UPDATE streaks SET streak = streak + 1, streak_updated_on = \"" + updateOn + "\" WHERE contact_id = " + id + ";";
                         db.execSQL(update_query);
                     }
                     cp.close();
