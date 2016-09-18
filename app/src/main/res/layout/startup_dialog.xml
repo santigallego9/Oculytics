@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="#ffffffff">
+
+    <TextView
+        android:id="@+id/guess"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="How would you like to load in data?"
+        android:textSize="20sp"
+        android:textColor="@color/white"
+        android:background="@color/colorPrimary"
+        android:padding="40sp"
+        android:gravity="center_horizontal"/>
+
+    <TextView
+        android:id="@+id/import_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="I have a data file I from a previous phone I want to import"
+        android:textSize="15sp"
+        android:layout_below="@+id/guess"
+        android:padding="10sp"/>
+
+    <Button
+        android:id="@+id/import_button"
+        android:textColor="@color/colorAccent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Import"
+        android:layout_gravity="right"
+        android:gravity="start|center"
+        android:layout_marginBottom="10sp"
+        android:layout_marginLeft="20sp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_below="@id/import_text"
+        android:layout_alignLeft="@+id/import_text" />
+
+
+    <TextView
+        android:id="@+id/phone_history_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="I want to save history from this phone"
+        android:textSize="15sp"
+        android:layout_below="@+id/import_button"
+        android:padding="10sp"/>
+
+    <Button
+        android:id="@+id/history_button"
+        android:textColor="@color/colorAccent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Get History"
+        android:layout_gravity="right"
+        android:gravity="start|center"
+        android:layout_marginBottom="10sp"
+        android:layout_marginLeft="20sp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_below="@id/phone_history_text"
+        android:layout_alignLeft="@+id/import_text" />
+
+    <TextView
+        android:id="@+id/neither_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Neither (You'll have the chance to do either other option later in the settings"
+        android:textSize="15sp"
+        android:layout_below="@+id/history_button"
+        android:padding="10sp"/>
+
+    <Button
+        android:id="@+id/neither_button"
+        android:textColor="@color/colorAccent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Neither"
+        android:gravity="start|center"
+        android:layout_gravity="right"
+        android:layout_marginBottom="10sp"
+        android:layout_marginLeft="20sp"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_below="@id/neither_text"
+        android:layout_alignLeft="@+id/neither_text" />
+
+
+</RelativeLayout>
