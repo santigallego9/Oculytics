@@ -26,6 +26,7 @@ public class Database {
     public Database() {}
 
     public static final String DATABASE_NAME = "oculytics";
+    public final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
     // Create and/or populate the database
     public static void populateDatabase(int id, Activity activity) {
@@ -294,6 +295,8 @@ public class Database {
 
     public static void messageReceived(Context context, String number, String date) {
 
+        date = Dates.fromLocalToUtc(date);
+
         SQLiteDatabase db = context.openOrCreateDatabase(DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
         try {
 
@@ -352,6 +355,8 @@ public class Database {
     }
 
     public static void messageSent(Context context, String number, String date) {
+
+        date = Dates.fromLocalToUtc(date);
 
         SQLiteDatabase db = context.openOrCreateDatabase(DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
         try {
@@ -412,9 +417,11 @@ public class Database {
 
         db.close();
     }
-    /*
 
-    public static void mmsReceived(Context context, String number, Boolean original) {
+
+    public static void mmsReceived(Context context, String number, String date) {
+
+        date = Dates.fromLocalToUtc(date);
 
         String f_date = "\"" + date + "\"";
 
@@ -456,8 +463,24 @@ public class Database {
                     insertQuery = "INSERT INTO mms_received (contact_id, received_on) VALUES (" + id + ", " + f_date + ");";
                     // Log.d("MMS", insertQuery);
                     db.execSQL(insertQuery);
-                    insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
-                    db.execSQL(insertQuery);
+
+                    selectQuery = "SELECT * FROM streaks WHERE contact_id = " + id + ";";
+                    Cursor cs = db.rawQuery(selectQuery, null);
+
+                    if(cs.moveToFirst()) {
+                        String streak_date = cs.getString(cs.getColumnIndex("streak_updated_on"));
+                        DateTime streakDt = dtfOut.parseDateTime(streak_date);
+                        DateTime dateTime = dtfOut.parseDateTime(date);
+
+                        if(streakDt.isBefore(dateTime)) {
+                            insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
+                            db.execSQL(insertQuery);
+                        }
+                    } else {
+                        insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
+                        db.execSQL(insertQuery);
+                    }
+                    cs.close();
 
                 } while (c.moveToNext());
                 c.close();
@@ -467,6 +490,8 @@ public class Database {
     }
 
     public static void mmsSent(Context context, String number, String date) {
+
+        date = Dates.fromLocalToUtc(date);
 
         String f_date = "\"" + date + "\"";
 
@@ -514,8 +539,23 @@ public class Database {
                     insertQuery = "INSERT INTO mms_sent (contact_id, sent_on) VALUES (" + id + ", " + f_date + ");";
                     // Log.d("MMS", insertQuery);
                     db.execSQL(insertQuery);
-                    insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
-                    db.execSQL(insertQuery);
+
+                    selectQuery = "SELECT * FROM streaks WHERE contact_id = " + id + ";";
+                    Cursor cs = db.rawQuery(selectQuery, null);
+
+                    if(cs.moveToFirst()) {
+                        String streak_date = cs.getString(cs.getColumnIndex("streak_updated_on"));
+                        DateTime streakDt = dtfOut.parseDateTime(streak_date);
+                        DateTime dateTime = dtfOut.parseDateTime(date);
+
+                        if(streakDt.isBefore(dateTime)) {
+                            insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
+                            db.execSQL(insertQuery);
+                        }
+                    } else {
+                        insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", " + f_date + ");";
+                        db.execSQL(insertQuery);
+                    }
 
                 } while (c.moveToNext());
                 c.close();
@@ -523,7 +563,7 @@ public class Database {
         }
 
         db.close();
-    }*/
+    }
 
 
 }

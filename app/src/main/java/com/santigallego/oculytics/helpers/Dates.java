@@ -74,7 +74,7 @@ public class Dates {
 
         int l_hours = Integer.parseInt(local.substring(11, 13));
         int u_hours = Integer.parseInt(utc.substring(11, 13));
-        int d_hours = Integer.parseInt(date.substring(8, 10));
+        int d_hours = Integer.parseInt(date.substring(11, 13));
         int d_days = Integer.parseInt(date.substring(8, 10));
 
         int diff = l_hours - u_hours;
@@ -93,6 +93,42 @@ public class Dates {
 
         if(s_days.length() < 2) { s_days = "0" + s_days; }
         if(s_hours.length() < 2) { s_hours = "0" + s_hours; }
+
+        date = date.substring(0, 8) + s_days + " " + s_hours + date.substring(13);
+
+        return date;
+    }
+
+    public static String fromLocalToUtc(String date) {
+
+        String local = dtfOut.print(new LocalDateTime());
+        String utc = dtfOut.print(new DateTime(DateTimeZone.UTC));
+
+        int l_hours = Integer.parseInt(local.substring(11, 13));
+        int u_hours = Integer.parseInt(utc.substring(11, 13));
+        int d_hours = Integer.parseInt(date.substring(11, 13));
+        int d_days = Integer.parseInt(date.substring(8, 10));
+
+        int diff = u_hours - l_hours;
+        d_hours += diff;
+
+        if (d_hours < 0) {
+            d_days--;
+            d_hours += 24;
+        } else if (d_hours > 24) {
+            d_days++;
+            d_hours -= 24;
+        }
+
+        String s_days = d_days + "";
+        String s_hours = d_hours + "";
+
+        if (s_days.length() < 2) {
+            s_days = "0" + s_days;
+        }
+        if (s_hours.length() < 2) {
+            s_hours = "0" + s_hours;
+        }
 
         date = date.substring(0, 8) + s_days + " " + s_hours + date.substring(13);
 
