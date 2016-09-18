@@ -1,30 +1,28 @@
 package com.santigallego.oculytics.activities;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.SearchManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -44,52 +42,49 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 
-import com.santigallego.oculytics.helpers.Contacts;
 import com.santigallego.oculytics.helpers.Database;
 import com.santigallego.oculytics.R;
 import com.santigallego.oculytics.helpers.Dates;
+import com.santigallego.oculytics.helpers.FileUtils;
 import com.santigallego.oculytics.helpers.MathHelper;
-import com.santigallego.oculytics.helpers.PhoneNumbers;
 import com.santigallego.oculytics.helpers.SmsContactDetailsHelper;
+import com.santigallego.oculytics.helpers.StartupDialog;
 import com.santigallego.oculytics.helpers.Streaks;
 import com.santigallego.oculytics.services.ObserverService;
-import com.squareup.picasso.Downloader;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 
-import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
-    private static ArrayList<Bitmap> bitmaps = new ArrayList<>();
-    public final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
+    private static final int FILE_SELECT_CODE = 0;
+    long startTime, endTime;
+    //private static ArrayList<Bitmap> bitmaps = new ArrayList<>();
+    //public final static DateTimeFormatter dtfOut = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        startTime = System.nanoTime();
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Toolbar:");
+        // long // start =System.nanoTime();
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
 
-        try {
 
-
-        } catch (Exception e) {
-            Log.d("SP", e.toString());
-            e.printStackTrace();
-        }
-
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Search view:");
+        // start =System.nanoTime();
         try {
 
             SearchView searchView = (SearchView) findViewById(R.id.action_search);
@@ -98,13 +93,15 @@ public class MainActivity extends AppCompatActivity {
             TextView textView = (TextView) searchView.findViewById(id);
             textView.setTextColor(Color.BLACK);
         }catch (Exception e) {
-            Log.d("SEARCH", e.toString());
+            //Log.d("SEARCH", e.toString());
             e.printStackTrace();
         }
 
-        // SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
 
-        /*db.execSQL("DROP TABLE IF EXISTS totals");
+        /*SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+        db.execSQL("DROP TABLE IF EXISTS totals");
         db.execSQL("DROP TABLE IF EXISTS mms_totals");
         db.execSQL("DROP TABLE IF EXISTS contacts");
         db.execSQL("DROP TABLE IF EXISTS streaks");
@@ -114,249 +111,55 @@ public class MainActivity extends AppCompatActivity {
         db.execSQL("DROP TABLE IF EXISTS mms_received");*/
 
         startupFunctions();
+        
 
-        //new SetupMessagesTask().execute("");
-
-
-    }
-
-    private class SetupMessagesTask extends AsyncTask<String, Integer, Long> {
-
-        double total;
-
-        // Do the long-running work in here
-        protected Long doInBackground(String... strings) {
-            /*int count = urls.length;
-            long totalSize = 0;
-            for (int i = 0; i < count; i++) {
-                totalSize += Downloader.downloadFile(urls[i]);
-                publishProgress((int) ((i / (float) count) * 100));
-                // Escape early if cancel() is called
-                if (isCancelled()) break;
-            }*/
-
-            // this is a change
-
-            int s_id = -1, sent = 0, received = 0;
-
-            Uri uriSMSURI = Uri.parse("content://sms");
-            Cursor cr = getContentResolver().query(uriSMSURI, null, null, null, null);
-
-            uriSMSURI = Uri.parse("content://mms");
-            Cursor cmms = MainActivity.this.getContentResolver().query(uriSMSURI, null, null, null, null);
-
-            int crc = 0, cmmsc = 0;
-            long totalSize = 0;
-
-            try { crc = cr.getCount(); } catch (Exception e) { e.printStackTrace(); }
-            try { cmmsc = cmms.getCount(); } catch (Exception e) { e.printStackTrace(); }
-
-            total = crc + cmmsc;
-            double counter = 0;
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean runStartup = prefs.getBoolean("startup", true);
 
 
-            // this will make it point to the first record, which is the last SMS sent
-            if(cr.moveToLast()) {
-                do {
-                    counter++;
-                    totalSize++;
-                    if (s_id != cr.getInt(cr.getColumnIndex("_id"))) {
-                        s_id = cr.getInt(cr.getColumnIndex("_id"));
-
-                        String address = cr.getString(cr.getColumnIndex("address"));
-                        String date = cr.getString(cr.getColumnIndex("date"));
-                        int type = cr.getInt(cr.getColumnIndex("type"));
-                        String smsType = "";
-
-                        long milliSeconds = Long.parseLong(date);
-                        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        Calendar calendar = Calendar.getInstance();
-                        calendar.setTimeInMillis(milliSeconds);
-                        String finalDateString = formatter.format(calendar.getTime());
-
-                        if(type == 1) {
-                            //smsType = "RECEIVED";
-                            received++;
-                            try {
-
-                                boolean contactExists = true;
-
-                                // if contact exists check if streaks needs to be cleared
-                                int id = Streaks.getContactId(MainActivity.this, address);
-                                if(id != -1) {
-                                    contactExists = false;
-                                    Streaks.checkForStreakClear(MainActivity.this, id);
-                                }
-
-                                // log message into database
-                                Database.messageReceived(MainActivity.this, address, finalDateString);
-
-                                // get id if contact did not exist before
-                                if(!contactExists) {
-                                    id = Streaks.getContactId(MainActivity.this, address);
-                                }
-
-                                // check if streak needs to be updated
-                                Streaks.updateStreak(MainActivity.this, id);
-
-                            } catch (Exception e) {
-                                // Log("MESSAGE_ERROR", "Ignoring this message");
-                            }
-                        } else if(type == 2) {
-                            //smsType = "SENT";
-                            sent++;
-                            try {
-
-                                boolean contactExists = true;
-
-                                // if contact exists check if streaks needs to be cleared
-                                int id = Streaks.getContactId(MainActivity.this, address);
-                                if(id != -1) {
-                                    contactExists = false;
-                                    Streaks.checkForStreakClear(MainActivity.this, id);
-                                }
-
-                                // log message into database
-                                Database.messageSent(MainActivity.this, address, finalDateString);
-
-                                // get id if contact did not exist before
-                                if(!contactExists) {
-                                    id = Streaks.getContactId(MainActivity.this, address);
-                                }
-
-                                // check if streak needs to be updated
-                                Streaks.updateStreak(MainActivity.this, id);
-
-                            } catch (Exception e) {
-                                // Log("MESSAGE_ERROR", "Ignoring this message");
-                            }
-                        }
-
-                    } else {
-                        // Log("TESTING", "MESSAGE ALREADY LOGGED");
-                    }
-                    publishProgress((int)counter);
-                } while(cr.moveToPrevious());
-            }
-
-
-            cr.close();
-
-
-
-            s_id = -1;
-
-            if(cmms.moveToLast()) {
-                do {
-                    counter++;
-                    try {
-                        String isIncoming = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
-                        if (isIncoming.equals("insert-address-token")) {
-                            String address = getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))));
-                            if (address.length() > 1) {
-                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
-                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", "OUTGOING: " + getOutgoingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0)))));
-
-                                    Database.mmsSent(MainActivity.this, address);
-
-
-                                }
-                            }
-                        } else {
-                            String address = getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this);
-                            if (address.length() > 1) {
-                                if (s_id != Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))))) {
-                                    s_id = Integer.parseInt(cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", cmms.getColumnName(0) + ": " + cmms.getString(cmms.getColumnIndex(cmms.getColumnName(0))));
-                                    // Log("MMS", "INCOMING: " + getIncomingMmsAddress(cmms.getInt(cmms.getColumnIndex(cmms.getColumnName(0))), MainActivity.this));
-
-                                    Database.mmsReceived(MainActivity.this, address);
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Log("MMS", "BROKE DOWN");
-                    }
-                    publishProgress((int)counter);
-                } while (cmms.moveToPrevious());
-            }
-
-            cmms.close();
-
-
-            return totalSize;
-        }
-
-        public String getOutgoingMmsAddress(int id) {
-            String selectionAdd = new String("msg_id=" + id);
-            String uriStr = "content://mms/" + id + "/addr";
-            Uri uriAddress = Uri.parse(uriStr);
-            Cursor cAdd = getContentResolver().query(uriAddress, null,
-                    selectionAdd, null, null);
-            String name = null;
-            if (cAdd.moveToFirst()) {
-                do {
-                    String number = cAdd.getString(cAdd.getColumnIndex("address"));
-                    if (number != null) {
-                        try {
-                            Long.parseLong(number.replace("-", ""));
-                            name = number;
-                        } catch (NumberFormatException nfe) {
-                            if (name == null) {
-                                name = number;
-                            }
-                        }
-                    }
-                } while (cAdd.moveToNext());
-            }
-            if (cAdd != null) {
-                cAdd.close();
-            }
-            return name;
-        }
-
-        public String getIncomingMmsAddress(int id, Activity service) {
-            String addrSelection = "type=137 AND msg_id=" + id;
-            String uriStr = "content://mms/" + id + "/addr";
-            Uri uriAddress = Uri.parse(uriStr);
-            String[] columns = { "address" };
-            Cursor cursor = service.getContentResolver().query(uriAddress, columns,
-                    addrSelection, null, null);
-            String address = "";
-            String val;
-            if (cursor.moveToFirst()) {
-                do {
-                    val = cursor.getString(cursor.getColumnIndex("address"));
-                    if (val != null) {
-                        address = val;
-                        // Use the first one found if more than one
-                        break;
-                    }
-                } while (cursor.moveToNext());
-            }
-            if (cursor != null) {
-                cursor.close();
-            }
-            // return address.replaceAll("[^0-9]", "");
-            return address;
-        }
-
-        // This is called each time you call publishProgress()
-        protected void onProgressUpdate(Double... progress) {
-
-            double percent = progress[0] / total * 100;
-
-            // Log("PERCENT", "" + percent);
-        }
-
-        // This is called when doInBackground() is finished
-        protected void onPostExecute(Long result) {
+        if(runStartup) {
+            StartupDialog alert = new StartupDialog();
+            alert.startupDialog(this);
             setInformation();
         }
     }
 
+    public double time(long startTime, long stopTime) {
+        return (double) stopTime / 1000000000.0 - (double) startTime / 1000000000.0;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        setInformation();
+
+        endTime = System.nanoTime();
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "TOTAL:");
+        //Log.d("TIMER", time(startTime, endTime) + "");
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case FILE_SELECT_CODE:
+                if (resultCode == RESULT_OK) {
+                    // Get the Uri of the selected file
+                    Uri uri = data.getData();
+                    // Log.d("UPLOAD", "File Uri: " + uri.toString());
+                    // Get the path
+                    String path = FileUtils.getPath(this, uri);
+                    //Log.d("UPLOAD", "File Path: " + path);
+                    // Get the file instance
+                    // File file = new File(path);
+                    // Initiate the upload
+                }
+                break;
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -386,20 +189,50 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(settings);
                 return true;
 
-            case R.id.action_upload:
+            case R.id.action_delete:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
-                Intent upload = new Intent(this, FileInfoActivity.class);
-                upload.putExtra("upload", false);
-                startActivity(upload);
+
+                new AlertDialog.Builder(this)
+                        .setTitle("Clear data")
+                        .setMessage("Are you sure you want to delete everything?")
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                SQLiteDatabase db = MainActivity.this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
+
+                                db.execSQL("DROP TABLE IF EXISTS totals");
+                                db.execSQL("DROP TABLE IF EXISTS mms_totals");
+                                db.execSQL("DROP TABLE IF EXISTS contacts");
+                                db.execSQL("DROP TABLE IF EXISTS streaks");
+                                db.execSQL("DROP TABLE IF EXISTS sms_sent");
+                                db.execSQL("DROP TABLE IF EXISTS sms_received");
+                                db.execSQL("DROP TABLE IF EXISTS mms_sent");
+                                db.execSQL("DROP TABLE IF EXISTS mms_received");
+
+                                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+                                SharedPreferences.Editor editor = prefs.edit();
+                                editor.putBoolean("startup", true);
+                                editor.apply();
+
+                                startupFunctions();
+                            }
+                        })
+                        .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .show();
+
                 return true;
 
             case R.id.action_download:
                 // User chose the "Favorite" action, mark the current item
                 // as a favorite...
-                Intent download = new Intent(this, FileInfoActivity.class);
+                /*Intent download = new Intent(this, FileInfoActivity.class);
                 download.putExtra("download", true);
-                startActivity(download);
+                startActivity(download);*/
                 return true;
 
             /*case R.id.action_search:
@@ -414,124 +247,6 @@ public class MainActivity extends AppCompatActivity {
                 // Invoke the superclass to handle it.
                 return super.onOptionsItemSelected(item);
 
-        }
-    }
-
-    public void updateDB() {
-        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
-        //db.execSQL("DROP TABLE streaks;");
-        //db.execSQL("CREATE TABLE streaks (id INTEGER PRIMARY KEY, contact_id INTEGER, streak INTEGER default 1, streak_updated_on DATETIME default current_timestamp);");
-
-        try {
-            db.execSQL("DROP TABLE streaks;");
-            //db.execSQL("ALTER TABLE contacts ADD COLUMN sent_updated_on DATETIME;");
-            //db.execSQL("ALTER TABLE contacts ADD COLUMN received_updated_on DATETIME;");
-
-            db.execSQL("CREATE TABLE streaks (id INTEGER PRIMARY KEY, contact_id INTEGER, streak INTEGER default 1, streak_updated_on DATETIME default current_timestamp);");
-        } catch (Exception e) {
-            // Log("FAILED", "CREATE: " + e.toString());
-        }
-
-        String query = "SELECT * FROM contacts;";
-
-        Cursor cr = db.rawQuery(query, null);
-
-        if(cr.moveToFirst()) {
-            do {
-                String updatedOn = cr.getString(cr.getColumnIndex("updated_on"));
-                int id = cr.getInt(cr.getColumnIndex("id"));
-
-
-                String sms_sent_on = getStreakInfo(id, "sms_sent", "sent_on");
-                String sms_received_on = getStreakInfo(id, "sms_received", "received_on");
-                String mms_sent_on = getStreakInfo(id, "mms_sent", "sent_on");
-                String mms_received_on = getStreakInfo(id, "mms_received", "received_on");
-
-                DateTime sent_on = null, received_on = null;
-
-                boolean sms_sent = false, sms_received = false, mms_sent = false, mms_received = false, sent = true, received = true;
-
-                DateTimeFormatter dtf = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
-
-                DateTime dt_sms_sent_on = null, dt_sms_received_on = null, dt_mms_sent_on = null, dt_mms_received_on = null;
-
-                if(sms_sent_on.length() > 0) {
-                    dt_sms_sent_on = dtf.parseDateTime(sms_sent_on);
-                    sms_sent = true;
-                }
-
-                if(sms_received_on.length() > 0) {
-                    dt_sms_received_on = dtf.parseDateTime(sms_received_on);
-                    sms_received = true;
-                }
-
-                if(mms_sent_on.length() > 0) {
-                    dt_mms_sent_on = dtf.parseDateTime(mms_sent_on);
-                    mms_sent = true;
-                }
-
-                if(mms_received_on.length() > 0) {
-                    dt_mms_received_on = dtf.parseDateTime(mms_received_on);
-                    mms_received = true;
-                }
-
-                if(sms_sent && mms_sent) {
-                    boolean sms = dt_sms_sent_on.isAfter(dt_mms_sent_on);
-                    if(sms) {
-                        sent_on = dt_sms_sent_on;
-                    } else {
-                        sent_on = dt_mms_sent_on;
-                    }
-                } else if (sms_sent && !mms_sent) {
-                    sent_on = dt_sms_sent_on;
-                } else if (!sms_sent && mms_sent){
-                    sent_on = dt_mms_sent_on;
-                } else {
-                    sent = false;
-                }
-
-                if(sms_received && mms_received) {
-                    boolean sms = dt_sms_received_on.isAfter(dt_mms_received_on);
-                    if(sms) {
-                        received_on = dt_sms_received_on;
-                    } else {
-                        received_on = dt_mms_received_on;
-                    }
-                } else if (sms_received && !mms_received) {
-                    received_on = dt_sms_sent_on;
-                } else if (!sms_received && mms_received){
-                    received_on = dt_mms_sent_on;
-                } else {
-                    received = false;
-                }
-
-                String updateQuery;
-
-                if(sent && received) {
-                    updateQuery = "UPDATE contacts SET sent_updated_on = \"" + dtfOut.print(sent_on) + "\", received_updated_on = \"" + dtfOut.print(received_on) + "\";";
-                } else if (!sent && received) {
-                    updateQuery = "UPDATE contacts SET received_updated_on = \"" + dtfOut.print(received_on) + "\";";
-                } else {
-                    updateQuery = "UPDATE contacts SET sent_updated_on = \"" + dtfOut.print(sent_on) + "\";";
-                }
-
-                try {
-                    db.execSQL(updateQuery);
-                } catch (Exception e) {
-                    // Log("FAILED", "UPDATE contacts: " + e.toString());
-                }
-
-
-                String insertQuery = "INSERT INTO streaks (contact_id, streak_updated_on) VALUES (" + id + ", \"" + updatedOn + "\");";
-                try {
-                    db.execSQL(insertQuery);
-                } catch (Exception e) {
-                    // Log("FAILED", "INSERT INTO streaks: " + e.toString());
-                }
-            } while (cr.moveToNext());
-
-            db.close();
         }
     }
 
@@ -550,13 +265,14 @@ public class MainActivity extends AppCompatActivity {
                 if(cr.moveToFirst()) {
                     do {
                         int id = cr.getInt(cr.getColumnIndex("id"));
-                        String number = cr.getString(cr.getColumnIndex("number"));
+                        //String number = cr.getString(cr.getColumnIndex("number"));
 
                         Streaks.checkForStreakClear(MainActivity.this, id);
                         Streaks.updateStreak(MainActivity.this, id);
 
                     } while(cr.moveToNext());
                 }
+                cr.close();
 
                 db.close();
             }
@@ -564,51 +280,59 @@ public class MainActivity extends AppCompatActivity {
         thread.run();
     }
 
-    private String getStreakInfo(int id, String table_name, String column_name) {
-        String timestamp;
-
-        SQLiteDatabase db = this.openOrCreateDatabase(Database.DATABASE_NAME, MainActivity.MODE_PRIVATE, null);
-
-        try {
-
-            String query = "SELECT * FROM '" + table_name + "' WHERE contact_id = " + id + " ORDER BY '" + column_name + "' DESC LIMIT 1";
-
-            Cursor cr = db.rawQuery(query, null);
-
-            if (cr.moveToFirst()) {
-                do {
-                    timestamp = cr.getString(cr.getColumnIndex(column_name));
-                } while (cr.moveToNext());
-                cr.close();
-            } else {
-                db.close();
-                return "";
-            }
-        } catch (Exception e) {
-            db.close();
-            return "";
-        }
-        db.close();
-
-        return timestamp;
-    }
-
     // Run all startup functions SHOULD NOT be called as a refresh
     private void startupFunctions() {
 
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Permissions:");
+        // long // start =System.nanoTime();
         // Ask for permissions
         permissions();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
 
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Start observer service:");
+        // start =System.nanoTime();
         // Startup outgoing messages service
         Intent intent = new Intent(this, ObserverService.class);
         startService(intent);
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
 
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Setup Refresh Listener:");
+        // start =System.nanoTime();
         setupRefreshListener();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
+
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Populate Database:");
+        // start =System.nanoTime();
         Database.populateDatabase(R.raw.seed, this);
-        setInformation();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
+
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Setup History Chart:");
+        // start =System.nanoTime();
         setupHistoryChart();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
+
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Check Battery State:");
+        // start =System.nanoTime();
         checkBatteryState();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
+
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Setup Ads:");
+        // start =System.nanoTime();
         setupAds();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
     }
 
     // Ask user for permissions
@@ -650,9 +374,25 @@ public class MainActivity extends AppCompatActivity {
 
     // Setup ALL information.
     private void setInformation() {
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Check streaks:");
+        // long // start =System.nanoTime();
         checkStreaks();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
+
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Setup totals:");
+        // start =System.nanoTime();
         setTotals();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
+
+
+        //Log.d("TIMER", " ");
+        //Log.d("TIMER", "Set top three:");
+        // start =System.nanoTime();
         setTopThree();
+        //Log.d("TIMER", "" + time(start, System.nanoTime()));
     }
 
     private void setInformation(SwipeRefreshLayout swipeRefreshLayout) {
@@ -756,14 +496,11 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("received", received);
                 contact.put("streak", "" + Streaks.getStreak(this, id));
 
-                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(this, contact, sentLayout, false);
-                if(bitmap != null) {
-                    bitmaps.add(bitmap);
-                }
+                SmsContactDetailsHelper.createContactSmsDetails(this, contact, sentLayout, false);
 
-                String msg = "NUMBER: " + number + " \n" +
+                /*String msg = "NUMBER: " + number + " \n" +
                              "SENT: " + sent + " \n" +
-                             "RECEIVED: " + received;
+                             "RECEIVED: " + received;*/
                 // Log("COUNT_TOP_THREE", msg);
 
             } while (cr.moveToNext());
@@ -790,14 +527,11 @@ public class MainActivity extends AppCompatActivity {
                 contact.put("received", received);
                 contact.put("streak", "" + Streaks.getStreak(this, id));
 
-                Bitmap bitmap = SmsContactDetailsHelper.createContactSmsDetails(this, contact, receivedLayout, false);
-                if(bitmap != null) {
-                    bitmaps.add(bitmap);
-                }
+                SmsContactDetailsHelper.createContactSmsDetails(this, contact, receivedLayout, false);
 
-                String msg = "NUMBER: " + number + " \n" +
+                /*String msg = "NUMBER: " + number + " \n" +
                              "SENT: " + sent + " \n" +
-                             "RECEIVED: " + received;
+                             "RECEIVED: " + received;*/
                 // Log("COUNT_TOP_THREE", msg);
 
             } while (c.moveToNext());

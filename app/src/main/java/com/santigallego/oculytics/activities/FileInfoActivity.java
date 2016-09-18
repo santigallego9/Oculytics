@@ -1,5 +1,6 @@
 package com.santigallego.oculytics.activities;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -35,7 +36,6 @@ public class FileInfoActivity extends AppCompatActivity {
         if(FileUtils.isExternalStorageWritable()) {
             FileUtils.writeToFile("oculytics_test_new", this);
         }
-
 
         FileUtils.showFileChooser(this);
     }
